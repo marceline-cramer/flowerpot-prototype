@@ -1,0 +1,58 @@
+[project]
+id = "flowerpot_prototype"
+name = "Flowerpot Prototype"
+version = "0.0.1"
+
+[components.tile]
+type = "Empty"
+name = "Tile"
+description = "A tag belonging to all tile entities."
+attributes = ["Debuggable"]
+
+[components.west_neighbor]
+type = "EntityId"
+name = "WestNeighhbor"
+description = "The entity ID west of this entity."
+attributes = ["Debuggable"]
+
+[components.north_neighbor]
+type = "EntityId"
+name = "NorthNeighhbor"
+description = "The entity ID north of this entity."
+attributes = ["Debuggable"]
+
+[components.east_neighbor]
+type = "EntityId"
+name = "EastNeighhbor"
+description = "The entity ID east of this entity."
+attributes = ["Debuggable"]
+
+[components.south_neighbor]
+type = "EntityId"
+name = "SouthNeighhbor"
+description = "The entity ID south of this entity."
+attributes = ["Debuggable"]
+
+[components.soil]
+type = "Empty"
+name = "soil"
+description = "A tag belonging to all soil tiles."
+attributes = ["Debuggable"]
+
+[components.fertility]
+type = "F32"
+name = "Fertility"
+description = "The fertility of a soil tile."
+attributes = ["Debuggable"]
+
+[components.fauna_occupant]
+type = "EntityId"
+name = "FaunaOccupant"
+description = "The entity ID of the fauna occupying this tile."
+attributes = ["Debuggable"]
+
+[components.fauna]
+type = "Empty"
+name = "Fauna"
+description = "A tag belonging to all fauna entities."
+attribute = ["Debuggable"]

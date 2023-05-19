@@ -51,8 +51,26 @@ name = "FaunaOccupant"
 description = "The entity ID of the fauna occupying this tile."
 attributes = ["Debuggable"]
 
+[components.on_tile]
+type = "EntityId"
+name = "OnTile"
+description = "The entity ID of the tile that this entity is on top of."
+attributes = ["Debuggable"]
+
 [components.fauna]
 type = "Empty"
 name = "Fauna"
 description = "A tag belonging to all fauna entities."
-attribute = ["Debuggable"]
+attributes = ["Debuggable"]
+
+[components.fullness]
+type = "F32"
+name = "Fullness"
+description = "The fullness (opposite of hunger) of this entity."
+attributes = ["Debuggable"]
+
+[components.hunger_rate]
+type = "F32"
+name = "HungerRate"
+description = "The rate at which this entity's fullness is depleted per second."
+attributes = ["Debuggable"]

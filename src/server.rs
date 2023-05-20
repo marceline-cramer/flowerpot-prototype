@@ -29,6 +29,9 @@ fn spawn_grass(tile: EntityId) -> EntityId {
         .with_default(small_crop())
         .with_default(grass())
         .with(sustenance(), 0.1)
+        .with(stamina(), 0.0)
+        .with(passive_metabolism(), 0.1)
+        .with(movement_cost(), 1.0)
         .with_default(cube())
         .with(scale(), Vec3::splat(0.25))
         .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
@@ -97,9 +100,9 @@ pub fn main() {
             }
         });
 
-    // passive metabolism refills fauna stamina
-    query((fauna(), stamina(), passive_metabolism())).each_frame(|entities| {
-        for (e, (_fauna, old_stamina, metabolism)) in entities {
+    // passive metabolism refills entity stamina
+    query((stamina(), passive_metabolism())).each_frame(|entities| {
+        for (e, (old_stamina, metabolism)) in entities {
             let new_stamina = old_stamina + metabolism * frametime();
             entity::set_component(e, stamina(), new_stamina);
         }
@@ -228,10 +231,7 @@ pub fn main() {
                 continue;
             }
 
-            let new_stamina = old_stamina - movement_cost;
-            entity::set_component(e, stamina(), new_stamina);
-
-            for_random_neighbors(&mut rng, tile, |neighbor| {
+            let moved = for_random_neighbors(&mut rng, tile, |neighbor| {
                 if entity::has_component(neighbor, fauna_occupant()) {
                     None
                 } else {
@@ -240,22 +240,38 @@ pub fn main() {
                     entity::set_component(e, on_tile(), neighbor);
                     Some(())
                 }
-            });
+            })
+            .is_some();
+
+            if moved {
+                let new_stamina = old_stamina - movement_cost;
+                entity::set_component(e, stamina(), new_stamina);
+            }
         }
     });
 
     // reproduce grass
-    query((grass(), on_tile())).each_frame(|entities| {
+    query((grass(), on_tile(), stamina(), movement_cost())).each_frame(|entities| {
         let mut rng = rand::thread_rng();
-        for (_e, (_grass, tile)) in entities {
-            for_random_neighbors(&mut rng, tile, |neighbor| {
+        for (e, (_grass, tile, old_stamina, movement_cost)) in entities {
+            if old_stamina < movement_cost {
+                continue;
+            }
+
+            let moved = for_random_neighbors(&mut rng, tile, |neighbor| {
                 if entity::has_component(neighbor, small_crop_occupant()) {
                     None
                 } else {
                     spawn_grass(neighbor);
                     Some(())
                 }
-            });
+            })
+            .is_some();
+
+            if moved {
+                let new_stamina = old_stamina - movement_cost;
+                entity::set_component(e, stamina(), new_stamina);
+            }
         }
     });
 

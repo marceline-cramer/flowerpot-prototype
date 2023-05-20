@@ -32,6 +32,54 @@ pub fn main() {
         .with(lookat_target(), vec3(16., 16., 0.))
         .spawn();
 
+    // decrease fullness by hunger rate
+    query((fullness(), hunger_rate())).each_frame(|entities| {
+        for (e, (old_fullness, hunger_rate)) in entities {
+            let fullness_delta = hunger_rate * frametime();
+            let new_fullness = old_fullness - fullness_delta;
+            entity::set_component(e, fullness(), new_fullness);
+        }
+    });
+
+    // kill entities with non-positive fullness
+    change_query((fullness(),))
+        .track_change(fullness())
+        .bind(|changed| {
+            for (e, fullness) in changed {
+                if fullness <= 0.0 {
+                    entity::despawn(e);
+                }
+            }
+        });
+
+    // remove despawned fauna on tiles from their tiles
+    despawn_query((fauna(), on_tile())).bind(|despawned| {
+        for (_e, (_fauna, tile)) in despawned {
+            entity::remove_component(tile, fauna_occupant());
+        }
+    });
+
+    // when fertility changes, update the tile's color
+    change_query((soil(), color(), fertility()))
+        .track_change(fertility())
+        .bind(|changes| {
+            for (e, (_soil, _color, new_fertility)) in changes.iter() {
+                let new_color = Vec4::new(0.2, *new_fertility, 0., 1.);
+                entity::set_component(*e, color(), new_color);
+            }
+        });
+
+    // reposition moved or newly created fauna to their tile
+    change_query((fauna(), on_tile()))
+        .track_change((fauna(), on_tile()))
+        .bind(|changes| {
+            for (e, (_fauna, tile)) in changes {
+                if let Some(pos) = entity::get_component(tile, translation()) {
+                    entity::add_component(e, translation(), pos);
+                }
+            }
+        });
+
     // spawn some initial tiles and store their IDs
     let mut rng = rand::thread_rng();
     let mut map = HashMap::new();
@@ -76,8 +124,8 @@ pub fn main() {
     }
 
     // spawn some bunnies
-    for (xy, tile) in map
-        .iter()
+    for tile in map
+        .values()
         .collect::<Vec<_>>()
         .partial_shuffle(&mut rng, 100)
         .0
@@ -85,7 +133,6 @@ pub fn main() {
     {
         let fauna = Entity::new()
             .with_merge(make_transformable())
-            .with(translation(), Vec3::new(xy.x as f32, xy.y as f32, 0.25))
             .with(scale(), Vec3::splat(0.5))
             .with_default(cube())
             .with(color(), Vec4::new(0.2, 0.3, 0.7, 1.0))
@@ -116,61 +163,15 @@ pub fn main() {
 
                 if let Some(neighbor) = neighbor {
                     if !entity::has_component(neighbor, fauna_occupant()) {
-                        entity::remove_component(tile, fauna_occupant());
                         entity::add_component(neighbor, fauna_occupant(), e);
+                        entity::remove_component(tile, fauna_occupant());
                         entity::set_component(e, on_tile(), neighbor);
-
-                        // TODO hacky; do with a system and dedicated component
-                        entity::set_component(
-                            e,
-                            translation(),
-                            entity::get_component(neighbor, translation()).unwrap()
-                                + Vec3::Z * 0.25,
-                        );
-
                         break;
                     }
                 }
             }
         }
     });
-
-    // decrease fullness by hunger rate
-    query((fullness(), hunger_rate())).each_frame(|entities| {
-        for (e, (old_fullness, hunger_rate)) in entities {
-            let fullness_delta = hunger_rate * frametime();
-            let new_fullness = old_fullness - fullness_delta;
-            entity::set_component(e, fullness(), new_fullness);
-        }
-    });
-
-    // kill entities with non-positive fullness
-    change_query((fullness(),))
-        .track_change(fullness())
-        .bind(|changed| {
-            for (e, fullness) in changed {
-                if fullness <= 0.0 {
-                    entity::despawn(e);
-                }
-            }
-        });
-
-    // remove despawned fauna on tiles from their tiles
-    despawn_query((fauna(), on_tile())).bind(|despawned| {
-        for (_e, (_fauna, tile)) in despawned {
-            entity::remove_component(tile, fauna_occupant());
-        }
-    });
-
-    // when fertility changes, update the tile's color
-    change_query((soil(), color(), fertility()))
-        .track_change((fertility(),))
-        .bind(|changes| {
-            for (e, (_soil, _color, new_fertility)) in changes.iter() {
-                let new_color = Vec4::new(0.2, *new_fertility, 0., 1.);
-                entity::set_component(*e, color(), new_color);
-            }
-        });
 
     println!("Hello, Ambient!");
 }

@@ -22,6 +22,51 @@ enum OrdinalDirection {
     South,
 }
 
+// TODO make this a concept (?)
+fn spawn_grass(tile: EntityId) -> EntityId {
+    let grass = Entity::new()
+        .with_merge(make_transformable())
+        .with_default(small_crop())
+        .with_default(grass())
+        .with(sustenance(), 0.1)
+        .with_default(cube())
+        .with(scale(), Vec3::splat(0.25))
+        .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
+        .with(on_tile(), tile)
+        .spawn();
+
+    entity::add_component(tile, small_crop_occupant(), grass);
+
+    grass
+}
+
+fn for_random_neighbors<T>(
+    rng: &mut impl Rng,
+    tile: EntityId,
+    mut cb: impl FnMut(EntityId) -> Option<T>,
+) -> Option<T> {
+    use OrdinalDirection::*;
+    let mut directions = [West, North, East, South];
+    directions.shuffle(rng);
+
+    for dir in directions {
+        let neighbor = match dir {
+            West => west_neighbor(),
+            North => north_neighbor(),
+            East => east_neighbor(),
+            South => south_neighbor(),
+        };
+
+        if let Some(neighbor) = entity::get_component(tile, neighbor) {
+            if let Some(t) = cb(neighbor) {
+                return Some(t);
+            }
+        }
+    }
+
+    None
+}
+
 #[main]
 pub fn main() {
     Entity::new()
@@ -113,19 +158,7 @@ pub fn main() {
                 .with(color(), Vec4::new(1.0, 0.0, 1.0, 1.0))
                 .spawn();
 
-            let grass = Entity::new()
-                .with_merge(make_transformable())
-                .with_default(small_crop())
-                .with_default(grass())
-                .with(sustenance(), 0.1)
-                .with_default(cube())
-                .with(scale(), Vec3::splat(0.25))
-                .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
-                .with(on_tile(), tile)
-                .spawn();
-
-            entity::add_component(tile, small_crop_occupant(), grass);
-
+            spawn_grass(tile);
             map.insert(xy, tile);
         }
     }
@@ -180,27 +213,31 @@ pub fn main() {
     query((fauna(), on_tile())).each_frame(|entities| {
         let mut rng = rand::thread_rng();
         for (e, (_fauna, tile)) in entities {
-            use OrdinalDirection::*;
-            let mut directions = [West, North, East, South];
-            directions.shuffle(&mut rng);
-
-            for dir in directions {
-                let neighbor = match dir {
-                    West => entity::get_component(tile, west_neighbor()),
-                    North => entity::get_component(tile, north_neighbor()),
-                    East => entity::get_component(tile, east_neighbor()),
-                    South => entity::get_component(tile, south_neighbor()),
-                };
-
-                if let Some(neighbor) = neighbor {
-                    if !entity::has_component(neighbor, fauna_occupant()) {
-                        entity::add_component(neighbor, fauna_occupant(), e);
-                        entity::remove_component(tile, fauna_occupant());
-                        entity::set_component(e, on_tile(), neighbor);
-                        break;
-                    }
+            for_random_neighbors(&mut rng, tile, |neighbor| {
+                if entity::has_component(neighbor, fauna_occupant()) {
+                    None
+                } else {
+                    entity::add_component(neighbor, fauna_occupant(), e);
+                    entity::remove_component(tile, fauna_occupant());
+                    entity::set_component(e, on_tile(), neighbor);
+                    Some(())
                 }
-            }
+            });
+        }
+    });
+
+    // reproduce grass
+    query((grass(), on_tile())).each_frame(|entities| {
+        let mut rng = rand::thread_rng();
+        for (_e, (_grass, tile)) in entities {
+            for_random_neighbors(&mut rng, tile, |neighbor| {
+                if entity::has_component(neighbor, small_crop_occupant()) {
+                    None
+                } else {
+                    spawn_grass(neighbor);
+                    Some(())
+                }
+            });
         }
     });
 

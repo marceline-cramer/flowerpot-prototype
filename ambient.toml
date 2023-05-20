@@ -87,6 +87,23 @@ name = "Fauna"
 description = "A tag belonging to all fauna entities."
 attributes = ["Debuggable"]
 
+[components.stamina]
+type = "F32"
+name = "Stamina"
+description = "The amount of energy a fauna has available to perform actions."
+attributes = ["Debuggable"]
+
+[components.passive_metabolism]
+type = "F32"
+name = "PassiveMetabolism"
+description = "The amount of stamina that a fauna passively regains per second."
+attributes = ["Debuggable"]
+
+[components.movement_cost]
+type = "F32"
+name = "MovementCost"
+description = "The amount of stamina a fauna requires to move by a tile."
+
 [components.bunny]
 type = "Empty"
 name = "Bunny"

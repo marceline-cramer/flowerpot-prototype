@@ -97,6 +97,14 @@ pub fn main() {
             }
         });
 
+    // passive metabolism refills fauna stamina
+    query((fauna(), stamina(), passive_metabolism())).each_frame(|entities| {
+        for (e, (_fauna, old_stamina, metabolism)) in entities {
+            let new_stamina = old_stamina + metabolism * frametime();
+            entity::set_component(e, stamina(), new_stamina);
+        }
+    });
+
     // remove despawned fauna on tiles from their tiles
     despawn_query((fauna(), on_tile())).bind(|despawned| {
         for (_e, (_fauna, tile)) in despawned {
@@ -200,6 +208,9 @@ pub fn main() {
             .with(color(), Vec4::new(0.2, 0.3, 0.7, 1.0))
             .with_default(fauna())
             .with_default(bunny())
+            .with(stamina(), 0.0)
+            .with(passive_metabolism(), 1.0)
+            .with(movement_cost(), 0.5)
             .with(on_tile(), *tile)
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)
@@ -209,10 +220,17 @@ pub fn main() {
         entity::add_component(*tile, fauna_occupant(), fauna);
     }
 
-    // move bunnies
-    query((fauna(), on_tile())).each_frame(|entities| {
+    // move fauna
+    query((fauna(), on_tile(), stamina(), movement_cost())).each_frame(|entities| {
         let mut rng = rand::thread_rng();
-        for (e, (_fauna, tile)) in entities {
+        for (e, (_fauna, tile, old_stamina, movement_cost)) in entities {
+            if old_stamina < movement_cost {
+                continue;
+            }
+
+            let new_stamina = old_stamina - movement_cost;
+            entity::set_component(e, stamina(), new_stamina);
+
             for_random_neighbors(&mut rng, tile, |neighbor| {
                 if entity::has_component(neighbor, fauna_occupant()) {
                     None

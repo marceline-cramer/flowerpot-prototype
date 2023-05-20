@@ -135,6 +135,33 @@ pub fn main() {
         }
     });
 
+    // decrease fullness by hunger rate
+    query((fullness(), hunger_rate())).each_frame(|entities| {
+        for (e, (old_fullness, hunger_rate)) in entities {
+            let fullness_delta = hunger_rate * frametime();
+            let new_fullness = old_fullness - fullness_delta;
+            entity::set_component(e, fullness(), new_fullness);
+        }
+    });
+
+    // kill entities with non-positive fullness
+    change_query((fullness(),))
+        .track_change(fullness())
+        .bind(|changed| {
+            for (e, fullness) in changed {
+                if fullness <= 0.0 {
+                    entity::despawn(e);
+                }
+            }
+        });
+
+    // remove despawned fauna on tiles from their tiles
+    despawn_query((fauna(), on_tile())).bind(|despawned| {
+        for (_e, (_fauna, tile)) in despawned {
+            entity::remove_component(tile, fauna_occupant());
+        }
+    });
+
     // when fertility changes, update the tile's color
     change_query((soil(), color(), fertility()))
         .track_change((fertility(),))

@@ -80,6 +80,22 @@ pub fn main() {
             }
         });
 
+    // when bunnies move they consume small crops and restore hunger
+    change_query((bunny(), on_tile(), fullness()))
+        .track_change(on_tile())
+        .bind(|changes| {
+            for (e, (_bunny, tile, old_fullness)) in changes {
+                if let Some(small_crop) = entity::get_component(tile, small_crop_occupant()) {
+                    if let Some(sustenance) = entity::get_component(small_crop, sustenance()) {
+                        let new_fullness = old_fullness + sustenance;
+                        entity::set_component(e, fullness(), new_fullness);
+                        entity::despawn(small_crop);
+                        entity::remove_component(tile, small_crop_occupant());
+                    }
+                }
+            }
+        });
+
     // spawn some initial tiles and store their IDs
     let mut rng = rand::thread_rng();
     let mut map = HashMap::new();
@@ -101,6 +117,7 @@ pub fn main() {
                 .with_merge(make_transformable())
                 .with_default(small_crop())
                 .with_default(grass())
+                .with(sustenance(), 0.1)
                 .with_default(cube())
                 .with(scale(), Vec3::splat(0.25))
                 .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
@@ -149,6 +166,7 @@ pub fn main() {
             .with_default(cube())
             .with(color(), Vec4::new(0.2, 0.3, 0.7, 1.0))
             .with_default(fauna())
+            .with_default(bunny())
             .with(on_tile(), *tile)
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)

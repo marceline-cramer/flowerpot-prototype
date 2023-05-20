@@ -63,6 +63,12 @@ name = "SmallCrop"
 description = "A tag given to all small crop entities."
 attributes = ["Debuggable"]
 
+[components.sustenance]
+type = "F32"
+name = "Sustenance"
+description = "The amount of fullness restored by devouring this entity."
+attributes = ["Debuggable"]
+
 [components.grass]
 type = "Empty"
 name = "Grass"
@@ -79,6 +85,12 @@ attributes = ["Debuggable"]
 type = "Empty"
 name = "Fauna"
 description = "A tag belonging to all fauna entities."
+attributes = ["Debuggable"]
+
+[components.bunny]
+type = "Empty"
+name = "Bunny"
+description = "An herbivorous bunny rabbit that eats small crops."
 attributes = ["Debuggable"]
 
 [components.fullness]

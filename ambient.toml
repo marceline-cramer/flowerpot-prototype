@@ -51,6 +51,24 @@ name = "FaunaOccupant"
 description = "The entity ID of the fauna occupying this tile."
 attributes = ["Debuggable"]
 
+[components.small_crop_occupant]
+type = "EntityId"
+name = "FaunaOccupant"
+description = "The entity ID of the small crop occupying this tile."
+attributes = ["Debuggable"]
+
+[components.small_crop]
+type = "EntityId"
+name = "SmallCrop"
+description = "A tag given to all small crop entities."
+attributes = ["Debuggable"]
+
+[components.grass]
+type = "Empty"
+name = "Grass"
+description = "A tag for grass crops."
+attributes = ["Debuggable"]
+
 [components.on_tile]
 type = "EntityId"
 name = "OnTile"

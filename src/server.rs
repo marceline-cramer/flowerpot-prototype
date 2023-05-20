@@ -69,11 +69,11 @@ pub fn main() {
             }
         });
 
-    // reposition moved or newly created fauna to their tile
-    change_query((fauna(), on_tile()))
-        .track_change((fauna(), on_tile()))
+    // reposition changed tile occupants to their tile
+    change_query((translation(), on_tile()))
+        .track_change(on_tile())
         .bind(|changes| {
-            for (e, (_fauna, tile)) in changes {
+            for (e, (_translation, tile)) in changes {
                 if let Some(pos) = entity::get_component(tile, translation()) {
                     entity::add_component(e, translation(), pos);
                 }
@@ -87,7 +87,7 @@ pub fn main() {
         for y in 0..32 {
             let xy = IVec2::new(x, y);
 
-            let e = Entity::new()
+            let tile = Entity::new()
                 .with_merge(make_transformable())
                 .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
                 .with_default(quad())
@@ -97,7 +97,19 @@ pub fn main() {
                 .with(color(), Vec4::new(1.0, 0.0, 1.0, 1.0))
                 .spawn();
 
-            map.insert(xy, e);
+            let grass = Entity::new()
+                .with_merge(make_transformable())
+                .with_default(small_crop())
+                .with_default(grass())
+                .with_default(cube())
+                .with(scale(), Vec3::splat(0.25))
+                .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
+                .with(on_tile(), tile)
+                .spawn();
+
+            entity::add_component(tile, small_crop_occupant(), grass);
+
+            map.insert(xy, tile);
         }
     }
 
@@ -146,6 +158,7 @@ pub fn main() {
         entity::add_component(*tile, fauna_occupant(), fauna);
     }
 
+    // move bunnies
     query((fauna(), on_tile())).each_frame(|entities| {
         let mut rng = rand::thread_rng();
         for (e, (_fauna, tile)) in entities {

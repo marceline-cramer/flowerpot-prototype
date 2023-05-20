@@ -15,6 +15,13 @@ use ambient_api::{
 
 use components::*;
 
+enum OrdinalDirection {
+    West,
+    North,
+    East,
+    South,
+}
+
 #[main]
 pub fn main() {
     Entity::new()
@@ -76,17 +83,57 @@ pub fn main() {
         .0
         .to_vec()
     {
-        Entity::new()
+        let fauna = Entity::new()
             .with_merge(make_transformable())
             .with(translation(), Vec3::new(xy.x as f32, xy.y as f32, 0.25))
             .with(scale(), Vec3::splat(0.5))
             .with_default(cube())
             .with(color(), Vec4::new(0.2, 0.3, 0.7, 1.0))
+            .with_default(fauna())
             .with(on_tile(), *tile)
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)
             .spawn();
+
+        // TODO automatically set occupants with query events
+        entity::add_component(*tile, fauna_occupant(), fauna);
     }
+
+    query((fauna(), on_tile())).each_frame(|entities| {
+        let mut rng = rand::thread_rng();
+        for (e, (_fauna, tile)) in entities {
+            use OrdinalDirection::*;
+            let mut directions = [West, North, East, South];
+            directions.shuffle(&mut rng);
+
+            for dir in directions {
+                let neighbor = match dir {
+                    West => entity::get_component(tile, west_neighbor()),
+                    North => entity::get_component(tile, north_neighbor()),
+                    East => entity::get_component(tile, east_neighbor()),
+                    South => entity::get_component(tile, south_neighbor()),
+                };
+
+                if let Some(neighbor) = neighbor {
+                    if !entity::has_component(neighbor, fauna_occupant()) {
+                        entity::remove_component(tile, fauna_occupant());
+                        entity::add_component(neighbor, fauna_occupant(), e);
+                        entity::set_component(e, on_tile(), neighbor);
+
+                        // TODO hacky; do with a system and dedicated component
+                        entity::set_component(
+                            e,
+                            translation(),
+                            entity::get_component(neighbor, translation()).unwrap()
+                                + Vec3::Z * 0.25,
+                        );
+
+                        break;
+                    }
+                }
+            }
+        }
+    });
 
     // when fertility changes, update the tile's color
     change_query((soil(), color(), fertility()))

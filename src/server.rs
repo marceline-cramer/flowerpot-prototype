@@ -24,13 +24,15 @@ enum OrdinalDirection {
 
 // TODO make this a concept (?)
 fn spawn_grass(tile: EntityId) -> EntityId {
+    let mut rng = thread_rng();
+
     let grass = Entity::new()
         .with_merge(make_transformable())
         .with_default(small_crop())
         .with_default(grass())
         .with(sustenance(), 0.1)
         .with(stamina(), 0.0)
-        .with(passive_metabolism(), 0.1)
+        .with(passive_metabolism(), rng.gen_range(0.09..0.11))
         .with(movement_cost(), 1.0)
         .with_default(cube())
         .with(scale(), Vec3::splat(0.25))
@@ -213,7 +215,7 @@ pub fn main() {
             .with_default(bunny())
             .with(stamina(), 0.0)
             .with(passive_metabolism(), 1.0)
-            .with(movement_cost(), 0.5)
+            .with(movement_cost(), rng.gen_range(0.4..0.6))
             .with(on_tile(), *tile)
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)

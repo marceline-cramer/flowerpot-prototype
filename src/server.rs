@@ -33,7 +33,7 @@ fn spawn_grass(tile: EntityId) -> EntityId {
         .with(sustenance(), 0.1)
         .with(stamina(), 0.0)
         .with(passive_metabolism(), rng.gen_range(0.09..0.11))
-        .with(movement_cost(), 1.0)
+        .with(movement_cost(), 0.1)
         .with_default(cube())
         .with(scale(), Vec3::splat(0.25))
         .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
@@ -117,12 +117,20 @@ pub fn main() {
         }
     });
 
+    // despawned fauna fertilize their tiles
+    despawn_query((fauna(), on_tile(), sustenance())).bind(|despawned| {
+        for (_e, (_fauna, tile, sustenance)) in despawned {
+            entity::mutate_component(tile, fertility(), |f| *f += sustenance);
+        }
+    });
+
     // when fertility changes, update the tile's color
     change_query((soil(), color(), fertility()))
         .track_change(fertility())
         .bind(|changes| {
             for (e, (_soil, _color, new_fertility)) in changes.iter() {
-                let new_color = Vec4::new(0.2, *new_fertility, 0., 1.);
+                let green = new_fertility.clamp(0.0, 1.0);
+                let new_color = Vec4::new(0.2, green, 0., 1.);
                 entity::set_component(*e, color(), new_color);
             }
         });
@@ -137,6 +145,21 @@ pub fn main() {
                 }
             }
         });
+
+    // small crops consume fertility from soil
+    query((small_crop(), passive_metabolism(), on_tile())).each_frame(|entities| {
+        for (e, (_crop, metabolism, tile)) in entities {
+            if let Some(old_fertility) = entity::get_component(tile, fertility()) {
+                let new_fertility = old_fertility - metabolism * frametime();
+                if new_fertility < 0.0 {
+                    entity::remove_component(tile, small_crop_occupant());
+                    entity::despawn(e);
+                } else {
+                    entity::set_component(tile, fertility(), new_fertility);
+                }
+            }
+        }
+    });
 
     // when bunnies move they consume small crops and restore hunger
     change_query((bunny(), on_tile(), fullness()))
@@ -219,6 +242,7 @@ pub fn main() {
             .with(on_tile(), *tile)
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)
+            .with(sustenance(), 10.0)
             .spawn();
 
         // TODO automatically set occupants with query events
@@ -248,6 +272,7 @@ pub fn main() {
             if moved {
                 let new_stamina = old_stamina - movement_cost;
                 entity::set_component(e, stamina(), new_stamina);
+                entity::mutate_component(tile, fertility(), |f| *f += movement_cost);
             }
         }
     });

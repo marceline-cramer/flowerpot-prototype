@@ -39,12 +39,6 @@ name = "soil"
 description = "A tag belonging to all soil tiles."
 attributes = ["Debuggable"]
 
-[components.fertility]
-type = "F32"
-name = "Fertility"
-description = "The fertility of a soil tile."
-attributes = ["Debuggable"]
-
 [components.fauna_occupant]
 type = "EntityId"
 name = "FaunaOccupant"

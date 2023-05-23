@@ -112,24 +112,6 @@ pub fn main() {
         }
     });
 
-    // despawned fauna fertilize their tiles
-    despawn_query((fauna(), on_tile(), sustenance())).bind(|despawned| {
-        for (_e, (_fauna, tile, sustenance)) in despawned {
-            entity::mutate_component(tile, fertility(), |f| *f += sustenance);
-        }
-    });
-
-    // when fertility changes, update the tile's color
-    change_query((soil(), color(), fertility()))
-        .track_change(fertility())
-        .bind(|changes| {
-            for (e, (_soil, _color, new_fertility)) in changes.iter() {
-                let green = new_fertility.clamp(0.0, 1.0);
-                let new_color = Vec4::new(0.2, green, 0., 1.);
-                entity::set_component(*e, color(), new_color);
-            }
-        });
-
     // reposition changed tile occupants to their tile
     change_query((translation(), on_tile()))
         .track_change(on_tile())
@@ -140,21 +122,6 @@ pub fn main() {
                 }
             }
         });
-
-    // small crops consume fertility from soil
-    query((small_crop(), passive_metabolism(), on_tile())).each_frame(|entities| {
-        for (e, (_crop, metabolism, tile)) in entities {
-            if let Some(old_fertility) = entity::get_component(tile, fertility()) {
-                let new_fertility = old_fertility - metabolism * frametime();
-                if new_fertility < 0.0 {
-                    entity::remove_component(tile, small_crop_occupant());
-                    entity::despawn(e);
-                } else {
-                    entity::set_component(tile, fertility(), new_fertility);
-                }
-            }
-        }
-    });
 
     // when bunnies move they consume small crops and restore hunger
     change_query((bunny(), on_tile(), fullness()))
@@ -196,7 +163,6 @@ pub fn main() {
                 .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
                 .with_default(tile())
                 .with_default(soil())
-                .with(fertility(), rng.gen_range(0.0..1.0))
                 .spawn();
 
             spawn_grass(tile);
@@ -277,7 +243,6 @@ pub fn main() {
             if moved {
                 let new_stamina = old_stamina - movement_cost;
                 entity::set_component(e, stamina(), new_stamina);
-                entity::mutate_component(tile, fertility(), |f| *f += movement_cost);
             }
         }
     });

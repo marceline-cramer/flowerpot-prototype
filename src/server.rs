@@ -105,13 +105,6 @@ pub fn main() {
         }
     });
 
-    // remove despawned fauna on tiles from their tiles
-    despawn_query((fauna(), on_tile())).bind(|despawned| {
-        for (_e, (_fauna, tile)) in despawned {
-            entity::remove_component(tile, fauna_occupant());
-        }
-    });
-
     // reposition changed tile occupants to their tile
     change_query((translation(), on_tile()))
         .track_change(on_tile())
@@ -200,7 +193,7 @@ pub fn main() {
         .0
         .to_vec()
     {
-        let fauna = Entity::new()
+        Entity::new()
             .with_merge(make_transformable())
             .with(scale(), Vec3::splat(0.5))
             .with_default(cube())
@@ -215,9 +208,6 @@ pub fn main() {
             .with(hunger_rate(), 0.1)
             .with(sustenance(), 10.0)
             .spawn();
-
-        // TODO automatically set occupants with query events
-        entity::add_component(*tile, fauna_occupant(), fauna);
     }
 
     // move fauna
@@ -229,14 +219,8 @@ pub fn main() {
             }
 
             let moved = for_random_neighbors(&mut rng, tile, |neighbor| {
-                if entity::has_component(neighbor, fauna_occupant()) {
-                    None
-                } else {
-                    entity::add_component(neighbor, fauna_occupant(), e);
-                    entity::remove_component(tile, fauna_occupant());
-                    entity::set_component(e, on_tile(), neighbor);
-                    Some(())
-                }
+                entity::set_component(e, on_tile(), neighbor);
+                Some(())
             })
             .is_some();
 

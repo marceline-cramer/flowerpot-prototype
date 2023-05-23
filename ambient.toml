@@ -39,12 +39,6 @@ name = "soil"
 description = "A tag belonging to all soil tiles."
 attributes = ["Debuggable"]
 
-[components.fauna_occupant]
-type = "EntityId"
-name = "FaunaOccupant"
-description = "The entity ID of the fauna occupying this tile."
-attributes = ["Debuggable"]
-
 [components.small_crop_occupant]
 type = "EntityId"
 name = "FaunaOccupant"

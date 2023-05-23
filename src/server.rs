@@ -8,7 +8,7 @@ use ambient_api::{
         transform::{lookat_target, translation},
     },
     concepts::{make_perspective_infinite_reverse_camera, make_transformable},
-    glam::IVec2,
+    glam::{ivec2, IVec2},
     prelude::*,
     rand,
 };
@@ -172,21 +172,31 @@ pub fn main() {
             }
         });
 
+    // spawn a ground plane
+    let map_width = 32;
+    let map_height = 32;
+    let map_dims = ivec2(map_width, map_height).as_vec2();
+    Entity::new()
+        .with_merge(make_transformable())
+        .with(translation(), (map_dims / 2.0).extend(0.0))
+        .with(scale(), (map_dims + 1.0).extend(1.0))
+        .with_default(quad())
+        .with(color(), Vec4::new(0.2, 1.0, 0.0, 1.0))
+        .spawn();
+
     // spawn some initial tiles and store their IDs
     let mut rng = rand::thread_rng();
     let mut map = HashMap::new();
-    for x in 0..32 {
-        for y in 0..32 {
+    for x in 0..map_width {
+        for y in 0..map_height {
             let xy = IVec2::new(x, y);
 
             let tile = Entity::new()
                 .with_merge(make_transformable())
                 .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
-                .with_default(quad())
                 .with_default(tile())
                 .with_default(soil())
                 .with(fertility(), rng.gen_range(0.0..1.0))
-                .with(color(), Vec4::new(1.0, 0.0, 1.0, 1.0))
                 .spawn();
 
             spawn_grass(tile);

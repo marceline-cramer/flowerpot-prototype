@@ -6,7 +6,7 @@ publish = false
 version = "0.0.1"
 
 [dependencies]
-ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "25f2eed9" }
+ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "cf45f3e" }
 
 [[bin]]
 name = "client_flowerpot_prototype"

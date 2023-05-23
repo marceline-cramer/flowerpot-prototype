@@ -24,16 +24,11 @@ enum OrdinalDirection {
 
 // TODO make this a concept (?)
 fn spawn_grass(tile: EntityId) -> EntityId {
-    let mut rng = thread_rng();
-
     let grass = Entity::new()
         .with_merge(make_transformable())
         .with_default(small_crop())
         .with_default(grass())
         .with(sustenance(), 0.1)
-        .with(stamina(), 0.0)
-        .with(passive_metabolism(), rng.gen_range(0.09..0.11))
-        .with(movement_cost(), 0.1)
         .with_default(cube())
         .with(scale(), Vec3::splat(0.25))
         .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
@@ -277,30 +272,25 @@ pub fn main() {
         }
     });
 
-    // reproduce grass
-    query((grass(), on_tile(), stamina(), movement_cost())).each_frame(|entities| {
-        let mut rng = rand::thread_rng();
-        for (e, (_grass, tile, old_stamina, movement_cost)) in entities {
-            if old_stamina < movement_cost {
-                continue;
-            }
-
-            let moved = for_random_neighbors(&mut rng, tile, |neighbor| {
+    let grass_grow = query((grass(), on_tile())).build();
+    let mut rng = rand::thread_rng();
+    messages::GrowTick::subscribe(move |_, _| {
+        for (_e, (_grass, tile)) in grass_grow.evaluate() {
+            for_random_neighbors(&mut rng, tile, |neighbor| {
                 if entity::has_component(neighbor, small_crop_occupant()) {
                     None
                 } else {
                     spawn_grass(neighbor);
                     Some(())
                 }
-            })
-            .is_some();
-
-            if moved {
-                let new_stamina = old_stamina - movement_cost;
-                entity::set_component(e, stamina(), new_stamina);
-            }
+            });
         }
     });
 
-    println!("Hello, Ambient!");
+    run_async(async move {
+        loop {
+            sleep(10.0).await;
+            messages::GrowTick::new().send_local_broadcast(true);
+        }
+    });
 }

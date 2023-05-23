@@ -103,6 +103,7 @@ attributes = ["Debuggable"]
 type = "F32"
 name = "MovementCost"
 description = "The amount of stamina a fauna requires to move by a tile."
+attributes = ["Debuggable"]
 
 [components.bunny]
 type = "Empty"
@@ -121,3 +122,7 @@ type = "F32"
 name = "HungerRate"
 description = "The rate at which this entity's fullness is depleted per second."
 attributes = ["Debuggable"]
+
+[messages.grow_tick]
+description = "Grows flora."
+fields = {}

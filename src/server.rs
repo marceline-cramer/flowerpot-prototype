@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use ambient_api::{
     components::core::{
@@ -77,6 +77,62 @@ pub fn main() {
         .with(lookat_target(), vec3(16., 16., 0.))
         .spawn();
 
+    // spawn a ground plane
+    let map_width = 32;
+    let map_height = 32;
+    let map_dims = ivec2(map_width, map_height).as_vec2();
+    Entity::new()
+        .with_merge(make_transformable())
+        .with(translation(), (map_dims / 2.0).extend(0.0))
+        .with(scale(), (map_dims + 1.0).extend(1.0))
+        .with_default(quad())
+        .with(color(), Vec4::new(0.2, 1.0, 0.0, 1.0))
+        .spawn();
+
+    // spawn some initial tiles and store their IDs
+    let mut rng = rand::thread_rng();
+    let mut map = HashMap::new();
+    for x in 0..map_width {
+        for y in 0..map_height {
+            let xy = IVec2::new(x, y);
+
+            let tile = Entity::new()
+                .with_merge(make_transformable())
+                .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
+                .with_default(tile())
+                .with_default(soil())
+                .with(map_position(), xy.as_vec2())
+                .spawn();
+
+            spawn_grass(tile);
+            map.insert(xy, tile);
+        }
+    }
+
+    let map = Arc::new(map);
+
+    // connect each tile's neighbor
+    for (xy, e) in map.iter() {
+        let xy = *xy;
+        let e = *e;
+
+        if let Some(neighbor) = map.get(&(xy - IVec2::X)) {
+            entity::add_component(e, west_neighbor(), *neighbor);
+        }
+
+        if let Some(neighbor) = map.get(&(xy - IVec2::Y)) {
+            entity::add_component(e, north_neighbor(), *neighbor);
+        }
+
+        if let Some(neighbor) = map.get(&(xy + IVec2::X)) {
+            entity::add_component(e, east_neighbor(), *neighbor);
+        }
+
+        if let Some(neighbor) = map.get(&(xy + IVec2::Y)) {
+            entity::add_component(e, south_neighbor(), *neighbor);
+        }
+    }
+
     // decrease fullness by hunger rate
     query((fullness(), hunger_rate())).each_frame(|entities| {
         for (e, (old_fullness, hunger_rate)) in entities {
@@ -87,7 +143,7 @@ pub fn main() {
     });
 
     // kill entities with non-positive fullness
-    change_query((fullness(),))
+    change_query(fullness())
         .track_change(fullness())
         .bind(|changed| {
             for (e, fullness) in changed {
@@ -104,6 +160,26 @@ pub fn main() {
             entity::set_component(e, stamina(), new_stamina);
         }
     });
+
+    // update entities' OnTile component with tile at map coordinates
+    change_query(map_position())
+        .track_change(map_position())
+        .bind({
+            let map = map.clone();
+            move |changes| {
+                for (e, xy) in changes {
+                    let xy = (xy + 0.5).floor().as_ivec2();
+                    match map.get(&xy) {
+                        None => entity::remove_component(e, on_tile()),
+                        Some(tile) => {
+                            entity::add_component(e, on_tile(), *tile);
+                            // TODO track which fauna are on which tiles?
+                            // entity::add_component(tile, fauna_occupant(), tile);
+                        }
+                    }
+                }
+            }
+        });
 
     // reposition changed tile occupants to their tile
     change_query((translation(), on_tile()))
@@ -132,59 +208,6 @@ pub fn main() {
             }
         });
 
-    // spawn a ground plane
-    let map_width = 32;
-    let map_height = 32;
-    let map_dims = ivec2(map_width, map_height).as_vec2();
-    Entity::new()
-        .with_merge(make_transformable())
-        .with(translation(), (map_dims / 2.0).extend(0.0))
-        .with(scale(), (map_dims + 1.0).extend(1.0))
-        .with_default(quad())
-        .with(color(), Vec4::new(0.2, 1.0, 0.0, 1.0))
-        .spawn();
-
-    // spawn some initial tiles and store their IDs
-    let mut rng = rand::thread_rng();
-    let mut map = HashMap::new();
-    for x in 0..map_width {
-        for y in 0..map_height {
-            let xy = IVec2::new(x, y);
-
-            let tile = Entity::new()
-                .with_merge(make_transformable())
-                .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
-                .with_default(tile())
-                .with_default(soil())
-                .spawn();
-
-            spawn_grass(tile);
-            map.insert(xy, tile);
-        }
-    }
-
-    // connect each tile's neighbor
-    for (xy, e) in map.iter() {
-        let xy = *xy;
-        let e = *e;
-
-        if let Some(neighbor) = map.get(&(xy - IVec2::X)) {
-            entity::add_component(e, west_neighbor(), *neighbor);
-        }
-
-        if let Some(neighbor) = map.get(&(xy - IVec2::Y)) {
-            entity::add_component(e, north_neighbor(), *neighbor);
-        }
-
-        if let Some(neighbor) = map.get(&(xy + IVec2::X)) {
-            entity::add_component(e, east_neighbor(), *neighbor);
-        }
-
-        if let Some(neighbor) = map.get(&(xy + IVec2::Y)) {
-            entity::add_component(e, south_neighbor(), *neighbor);
-        }
-    }
-
     // spawn some bunnies
     for tile in map
         .values()
@@ -203,7 +226,10 @@ pub fn main() {
             .with(stamina(), 0.0)
             .with(passive_metabolism(), 1.0)
             .with(movement_cost(), rng.gen_range(0.4..0.6))
-            .with(on_tile(), *tile)
+            .with(
+                map_position(),
+                entity::get_component(*tile, map_position()).unwrap(),
+            )
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)
             .with(sustenance(), 10.0)
@@ -218,16 +244,13 @@ pub fn main() {
                 continue;
             }
 
-            let moved = for_random_neighbors(&mut rng, tile, |neighbor| {
-                entity::set_component(e, on_tile(), neighbor);
-                Some(())
-            })
-            .is_some();
-
-            if moved {
+            for_random_neighbors(&mut rng, tile, |neighbor| {
+                let map_pos = entity::get_component(neighbor, map_position()).unwrap();
+                entity::set_component(e, map_position(), map_pos);
                 let new_stamina = old_stamina - movement_cost;
                 entity::set_component(e, stamina(), new_stamina);
-            }
+                Some(())
+            });
         }
     });
 

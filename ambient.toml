@@ -63,6 +63,12 @@ name = "Grass"
 description = "A tag for grass crops."
 attributes = ["Debuggable"]
 
+[components.map_position]
+type = "Vec2"
+name = "MapPosition"
+description = "The position of this entity in map coordinates."
+attributes = ["Debuggable"]
+
 [components.on_tile]
 type = "EntityId"
 name = "OnTile"

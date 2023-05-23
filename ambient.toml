@@ -99,6 +99,30 @@ name = "MovementCost"
 description = "The amount of stamina a fauna requires to move by a tile."
 attributes = ["Debuggable"]
 
+[components.movement_step]
+type = "F32"
+name = "MovementStep"
+description = "The time in seconds through the current movement."
+attributes = ["Debuggable"]
+
+[components.movement_duration]
+type = "F32"
+name = "MovementDuration"
+description = "The duration in seconds of the current movement."
+attributes = ["Debuggable"]
+
+[components.movement_start]
+type = "Vec2"
+name = "MovementStart"
+description = "The start (in map coordinates) of the current movement."
+attributes = ["Debuggable"]
+
+[components.movement_target]
+type = "Vec2"
+name = "MovementTarget"
+description = "The target (in map coordinates) of the current movement."
+attributes = ["Debuggable"]
+
 [components.bunny]
 type = "Empty"
 name = "Bunny"

@@ -161,34 +161,32 @@ pub fn main() {
         }
     });
 
-    // update entities' OnTile component with tile at map coordinates
+    // update entities' translation and OnTile with map coordinates
     change_query(map_position())
         .track_change(map_position())
         .bind({
             let map = map.clone();
             move |changes| {
                 for (e, xy) in changes {
+                    entity::add_component(e, translation(), xy.extend(0.0));
+
                     let xy = (xy + 0.5).floor().as_ivec2();
                     match map.get(&xy) {
                         None => entity::remove_component(e, on_tile()),
-                        Some(tile) => {
-                            entity::add_component(e, on_tile(), *tile);
-                            // TODO track which fauna are on which tiles?
-                            // entity::add_component(tile, fauna_occupant(), tile);
-                        }
+                        Some(tile) => entity::add_component(e, on_tile(), *tile),
                     }
                 }
             }
         });
 
-    // reposition changed tile occupants to their tile
-    change_query((translation(), on_tile()))
+    // anchor entities on tiles but without map positions to their tiles
+    change_query(on_tile())
         .track_change(on_tile())
+        .excludes(map_position())
         .bind(|changes| {
-            for (e, (_translation, tile)) in changes {
-                if let Some(pos) = entity::get_component(tile, translation()) {
-                    entity::add_component(e, translation(), pos);
-                }
+            for (e, tile) in changes {
+                let new_translation = entity::get_component(tile, translation()).unwrap();
+                entity::add_component(e, translation(), new_translation);
             }
         });
 
@@ -207,6 +205,28 @@ pub fn main() {
                 }
             }
         });
+
+    // step moving entities
+    query((
+        movement_step(),
+        movement_duration(),
+        movement_start(),
+        movement_target(),
+    ))
+    .each_frame(|entities| {
+        for (e, (step, duration, start, target)) in entities {
+            let new_step = step + frametime();
+            if new_step > duration {
+                entity::remove_component(e, movement_step());
+                entity::add_component(e, map_position(), target);
+            } else {
+                let delta = new_step / duration;
+                let new_pos = start * (1.0 - delta) + target * delta;
+                entity::set_component(e, movement_step(), new_step);
+                entity::add_component(e, map_position(), new_pos);
+            }
+        }
+    });
 
     // spawn some bunnies
     for tile in map
@@ -237,22 +257,33 @@ pub fn main() {
     }
 
     // move fauna
-    query((fauna(), on_tile(), stamina(), movement_cost())).each_frame(|entities| {
-        let mut rng = rand::thread_rng();
-        for (e, (_fauna, tile, old_stamina, movement_cost)) in entities {
-            if old_stamina < movement_cost {
-                continue;
-            }
+    query((fauna(), on_tile(), stamina(), movement_cost()))
+        .excludes(movement_step())
+        .each_frame(|entities| {
+            let mut rng = rand::thread_rng();
+            for (e, (_fauna, tile, old_stamina, movement_cost)) in entities {
+                if old_stamina < movement_cost {
+                    continue;
+                }
 
-            for_random_neighbors(&mut rng, tile, |neighbor| {
-                let map_pos = entity::get_component(neighbor, map_position()).unwrap();
-                entity::set_component(e, map_position(), map_pos);
-                let new_stamina = old_stamina - movement_cost;
-                entity::set_component(e, stamina(), new_stamina);
-                Some(())
-            });
-        }
-    });
+                for_random_neighbors(&mut rng, tile, |neighbor| {
+                    let start = entity::get_component(tile, map_position()).unwrap();
+                    let target = entity::get_component(neighbor, map_position()).unwrap();
+                    let new_stamina = old_stamina - movement_cost;
+
+                    let components = Entity::new()
+                        .with(movement_step(), 0.0)
+                        .with(movement_duration(), 0.5)
+                        .with(movement_start(), start)
+                        .with(movement_target(), target)
+                        .with(stamina(), new_stamina);
+
+                    entity::add_components(e, components);
+
+                    Some(())
+                });
+            }
+        });
 
     let grass_grow = query((grass(), on_tile())).build();
     let mut rng = rand::thread_rng();

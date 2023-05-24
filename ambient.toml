@@ -46,7 +46,7 @@ description = "The entity ID of the small crop occupying this tile."
 attributes = ["Debuggable"]
 
 [components.small_crop]
-type = "EntityId"
+type = "Empty"
 name = "SmallCrop"
 description = "A tag given to all small crop entities."
 attributes = ["Debuggable"]
@@ -139,6 +139,18 @@ attributes = ["Debuggable"]
 type = "F32"
 name = "HungerRate"
 description = "The rate at which this entity's fullness is depleted per second."
+attributes = ["Debuggable"]
+
+[components.search_small_crop_radius]
+type = "F32"
+name = "SearchSmallCropRadius"
+description = "The search radius to search for small crops in."
+attributes = ["Debuggable"]
+
+[components.search_small_crop_result]
+type = "EntityId"
+name = "SearchSmallCropResult"
+description = "The result of a search for small crops."
 attributes = ["Debuggable"]
 
 [messages.grow_tick]

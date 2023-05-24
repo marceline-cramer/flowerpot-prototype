@@ -15,11 +15,47 @@ use ambient_api::{
 
 use components::*;
 
-enum OrdinalDirection {
+mod partitioning;
+
+pub enum OrdinalDirection {
     West,
     North,
     East,
     South,
+}
+
+impl OrdinalDirection {
+    pub fn closest_to_vec2(v: Vec2) -> Self {
+        use OrdinalDirection::*;
+        if v.x.abs() > v.y.abs() {
+            if v.x > 0.0 {
+                East
+            } else {
+                West
+            }
+        } else {
+            if v.y > 0.0 {
+                South
+            } else {
+                North
+            }
+        }
+    }
+
+    pub fn as_neighbor_component(&self) -> Component<EntityId> {
+        use OrdinalDirection::*;
+        match self {
+            West => west_neighbor(),
+            North => north_neighbor(),
+            East => east_neighbor(),
+            South => south_neighbor(),
+        }
+    }
+
+    pub fn get_tile_neighbor(&self, tile: EntityId) -> Option<EntityId> {
+        let neighbor = self.as_neighbor_component();
+        entity::get_component(tile, neighbor)
+    }
 }
 
 // TODO make this a concept (?)
@@ -32,7 +68,10 @@ fn spawn_grass(tile: EntityId) -> EntityId {
         .with_default(cube())
         .with(scale(), Vec3::splat(0.25))
         .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
-        .with(on_tile(), tile)
+        .with(
+            map_position(),
+            entity::get_component(tile, map_position()).unwrap(),
+        )
         .spawn();
 
     entity::add_component(tile, small_crop_occupant(), grass);
@@ -50,14 +89,7 @@ fn for_random_neighbors<T>(
     directions.shuffle(rng);
 
     for dir in directions {
-        let neighbor = match dir {
-            West => west_neighbor(),
-            North => north_neighbor(),
-            East => east_neighbor(),
-            South => south_neighbor(),
-        };
-
-        if let Some(neighbor) = entity::get_component(tile, neighbor) {
+        if let Some(neighbor) = dir.get_tile_neighbor(tile) {
             if let Some(t) = cb(neighbor) {
                 return Some(t);
             }
@@ -132,6 +164,13 @@ pub fn main() {
             entity::add_component(e, south_neighbor(), *neighbor);
         }
     }
+
+    // init small crop searching
+    partitioning::init_qbvh(
+        small_crop(),
+        search_small_crop_radius(),
+        search_small_crop_result(),
+    );
 
     // decrease fullness by hunger rate
     query((fullness(), hunger_rate())).each_frame(|entities| {
@@ -232,7 +271,7 @@ pub fn main() {
     for tile in map
         .values()
         .collect::<Vec<_>>()
-        .partial_shuffle(&mut rng, 100)
+        .partial_shuffle(&mut rng, 5)
         .0
         .to_vec()
     {
@@ -246,6 +285,7 @@ pub fn main() {
             .with(stamina(), 0.0)
             .with(passive_metabolism(), 1.0)
             .with(movement_cost(), rng.gen_range(0.4..0.6))
+            .with(search_small_crop_radius(), 10.0)
             .with(
                 map_position(),
                 entity::get_component(*tile, map_position()).unwrap(),
@@ -257,33 +297,50 @@ pub fn main() {
     }
 
     // move fauna
-    query((fauna(), on_tile(), stamina(), movement_cost()))
-        .excludes(movement_step())
-        .each_frame(|entities| {
-            let mut rng = rand::thread_rng();
-            for (e, (_fauna, tile, old_stamina, movement_cost)) in entities {
-                if old_stamina < movement_cost {
-                    continue;
-                }
-
-                for_random_neighbors(&mut rng, tile, |neighbor| {
-                    let start = entity::get_component(tile, map_position()).unwrap();
-                    let target = entity::get_component(neighbor, map_position()).unwrap();
-                    let new_stamina = old_stamina - movement_cost;
-
-                    let components = Entity::new()
-                        .with(movement_step(), 0.0)
-                        .with(movement_duration(), 0.5)
-                        .with(movement_start(), start)
-                        .with(movement_target(), target)
-                        .with(stamina(), new_stamina);
-
-                    entity::add_components(e, components);
-
-                    Some(())
-                });
+    query((
+        fauna(),
+        map_position(),
+        on_tile(),
+        stamina(),
+        movement_cost(),
+        search_small_crop_result(),
+    ))
+    .excludes(movement_step())
+    .each_frame(|entities| {
+        for (e, (_fauna, map_pos, tile, old_stamina, movement_cost, search_result)) in entities {
+            if old_stamina < movement_cost {
+                continue;
             }
-        });
+
+            entity::remove_component(e, search_small_crop_result());
+
+            if search_result.is_null() {
+                continue;
+            }
+
+            let target_pos = match entity::get_component(search_result, map_position()) {
+                Some(target_pos) => target_pos,
+                None => continue,
+            };
+
+            let target_delta = target_pos - map_pos;
+            let target_dir = OrdinalDirection::closest_to_vec2(target_delta);
+            if let Some(neighbor) = target_dir.get_tile_neighbor(tile) {
+                let start = entity::get_component(tile, map_position()).unwrap();
+                let target = entity::get_component(neighbor, map_position()).unwrap();
+                let new_stamina = old_stamina - movement_cost;
+
+                let components = Entity::new()
+                    .with(movement_step(), 0.0)
+                    .with(movement_duration(), 0.5)
+                    .with(movement_start(), start)
+                    .with(movement_target(), target)
+                    .with(stamina(), new_stamina);
+
+                entity::add_components(e, components);
+            }
+        }
+    });
 
     let grass_grow = query((grass(), on_tile())).build();
     let mut rng = rand::thread_rng();

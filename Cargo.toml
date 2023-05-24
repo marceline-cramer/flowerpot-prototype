@@ -7,6 +7,8 @@ version = "0.0.1"
 
 [dependencies]
 ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "cf45f3e" }
+parry2d = "0.13"
+slab = "0.4"
 
 [[bin]]
 name = "client_flowerpot_prototype"

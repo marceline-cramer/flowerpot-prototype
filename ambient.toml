@@ -69,6 +69,12 @@ name = "MapPosition"
 description = "The position of this entity in map coordinates."
 attributes = ["Debuggable"]
 
+[components.map_elevation]
+type = "F32"
+name = "MapElevation"
+description = "The elevation of this entity above the map in meters."
+attributes = ["Debuggable"]
+
 [components.on_tile]
 type = "EntityId"
 name = "OnTile"
@@ -123,10 +129,22 @@ name = "MovementTarget"
 description = "The target (in map coordinates) of the current movement."
 attributes = ["Debuggable"]
 
+[components.movement_height]
+type = "F32"
+name = "MovementHeight"
+description = "The peak jump height of the current movement."
+attributes = ["Debuggable"]
+
 [components.bunny]
 type = "Empty"
 name = "Bunny"
 description = "An herbivorous bunny rabbit that eats small crops."
+attributes = ["Debuggable"]
+
+[components.movement_distance]
+type = "F32"
+name = "MovementDistance"
+description = "The distance (in map coordinates) of a single movement."
 attributes = ["Debuggable"]
 
 [components.fullness]

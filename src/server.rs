@@ -207,7 +207,8 @@ pub fn main() {
             let map = map.clone();
             move |changes| {
                 for (e, xy) in changes {
-                    entity::add_component(e, translation(), xy.extend(0.0));
+                    let elevation = entity::get_component(e, map_elevation()).unwrap_or(0.0);
+                    entity::add_component(e, translation(), xy.extend(elevation));
 
                     let xy = (xy + 0.5).floor().as_ivec2();
                     match map.get(&xy) {
@@ -267,6 +268,18 @@ pub fn main() {
         }
     });
 
+    // set elevation of entities with movement height
+    change_query((movement_step(), movement_duration(), movement_height()))
+        .track_change(movement_step())
+        .bind(|changes| {
+            for (e, (step, duration, height)) in changes {
+                let delta = step / duration;
+                let height_factor = delta * (1.0 - delta) * 4.0;
+                let elevation = height * height_factor;
+                entity::add_component(e, map_elevation(), elevation);
+            }
+        });
+
     // spawn some bunnies
     for tile in map
         .values()
@@ -285,6 +298,7 @@ pub fn main() {
             .with(stamina(), 0.0)
             .with(passive_metabolism(), 1.0)
             .with(movement_cost(), rng.gen_range(0.4..0.6))
+            .with(movement_distance(), 0.5)
             .with(search_small_crop_radius(), 10.0)
             .with(
                 map_position(),
@@ -300,14 +314,16 @@ pub fn main() {
     query((
         fauna(),
         map_position(),
-        on_tile(),
         stamina(),
         movement_cost(),
+        movement_distance(),
         search_small_crop_result(),
     ))
     .excludes(movement_step())
     .each_frame(|entities| {
-        for (e, (_fauna, map_pos, tile, old_stamina, movement_cost, search_result)) in entities {
+        for (e, (_fauna, map_pos, old_stamina, movement_cost, movement_distance, search_result)) in
+            entities
+        {
             if old_stamina < movement_cost {
                 continue;
             }
@@ -324,21 +340,20 @@ pub fn main() {
             };
 
             let target_delta = target_pos - map_pos;
-            let target_dir = OrdinalDirection::closest_to_vec2(target_delta);
-            if let Some(neighbor) = target_dir.get_tile_neighbor(tile) {
-                let start = entity::get_component(tile, map_position()).unwrap();
-                let target = entity::get_component(neighbor, map_position()).unwrap();
-                let new_stamina = old_stamina - movement_cost;
+            let movement_delta = target_delta.clamp_length(0.0, movement_distance);
+            let movement_theta = movement_delta.angle_between(Vec2::X);
+            let new_stamina = old_stamina - movement_cost;
 
-                let components = Entity::new()
-                    .with(movement_step(), 0.0)
-                    .with(movement_duration(), 0.5)
-                    .with(movement_start(), start)
-                    .with(movement_target(), target)
-                    .with(stamina(), new_stamina);
+            let components = Entity::new()
+                .with(rotation(), Quat::from_rotation_z(movement_theta))
+                .with(movement_step(), 0.0)
+                .with(movement_duration(), 0.25)
+                .with(movement_start(), map_pos)
+                .with(movement_target(), map_pos + movement_delta)
+                .with(movement_height(), 0.5)
+                .with(stamina(), new_stamina);
 
-                entity::add_components(e, components);
-            }
+            entity::add_components(e, components);
         }
     });
 

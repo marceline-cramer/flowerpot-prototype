@@ -56,6 +56,7 @@ pub fn init_qbvh(
 
                 let (qbvh, workspace) = data.split_borrow();
                 qbvh.refit(0.01, workspace, |leaf| {
+                    // TODO replace pos_cache with position info in leaves_to_entities?
                     if let Some(pos) = pos_cache.get(&leaf) {
                         let pos = Point::new(pos.x, pos.y);
                         Aabb::new(pos, pos)
@@ -103,7 +104,7 @@ pub fn init_qbvh(
                             None => continue,
                         };
 
-                        // TODO cache this in EntityLeaf?
+                        // TODO cache this in leaves_to_entities?
                         let result_pos = match entity::get_component(result, map_position()) {
                             None => continue,
                             Some(pos) => pos,

@@ -4,6 +4,7 @@ use ambient_api::{
     components::core::{
         app::main_scene,
         camera::aspect_ratio_from_window,
+        prefab::prefab_from_url,
         primitives::{cube, quad},
         transform::{lookat_target, translation},
     },
@@ -290,9 +291,7 @@ pub fn main() {
     {
         Entity::new()
             .with_merge(make_transformable())
-            .with(scale(), Vec3::splat(0.5))
-            .with_default(cube())
-            .with(color(), Vec4::new(0.2, 0.3, 0.7, 1.0))
+            .with(prefab_from_url(), asset::url("assets/fauna/rabbit.glb").unwrap())
             .with_default(fauna())
             .with_default(bunny())
             .with(stamina(), 0.0)
@@ -341,7 +340,7 @@ pub fn main() {
 
             let target_delta = target_pos - map_pos;
             let movement_delta = target_delta.clamp_length(0.0, movement_distance);
-            let movement_theta = movement_delta.angle_between(Vec2::X);
+            let movement_theta = -movement_delta.angle_between(Vec2::Y);
             let new_stamina = old_stamina - movement_cost;
 
             let components = Entity::new()

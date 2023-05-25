@@ -10,14 +10,21 @@ use crate::components::map_position;
 
 struct PartitioningData {
     qbvh: Qbvh<usize>,
-    leaves_to_entities: Slab<EntityId>,
+    leaves_to_entities: Slab<(EntityId, Aabb)>,
     entities_to_leaves: HashMap<EntityId, usize>,
     workspace: QbvhUpdateWorkspace,
 }
 
 impl PartitioningData {
-    fn split_borrow(&mut self) -> (&mut Qbvh<usize>, &mut QbvhUpdateWorkspace) {
-        (&mut self.qbvh, &mut self.workspace)
+    fn rebalance(&mut self) {
+        self.qbvh.refit(0.01, &mut self.workspace, |leaf| {
+            self.leaves_to_entities
+                .get(*leaf)
+                .map(|e| e.1.to_owned())
+                .unwrap_or(Aabb::new_invalid())
+        });
+
+        self.qbvh.rebalance(0.01, &mut self.workspace);
     }
 }
 
@@ -41,31 +48,23 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
             let data = data.clone();
             move |entities| {
                 let mut data = data.write().unwrap();
-                let mut pos_cache = HashMap::with_capacity(entities.len());
                 for (e, (pos, _searchable)) in entities {
-                    let leaf = if let Some(leaf) = data.entities_to_leaves.get(&e) {
-                        *leaf
+                    let pos_pt = Point::new(pos.x, pos.y);
+                    let aabb = Aabb::new(pos_pt, pos_pt);
+
+                    let leaf = if let Some(leaf) = data.entities_to_leaves.get(&e).copied() {
+                        data.leaves_to_entities.get_mut(leaf).unwrap().1 = aabb;
+                        leaf
                     } else {
-                        let leaf = data.leaves_to_entities.insert(e);
+                        let leaf = data.leaves_to_entities.insert((e, aabb));
                         data.entities_to_leaves.insert(e, leaf);
                         leaf
                     };
 
-                    pos_cache.insert(leaf, pos);
                     data.qbvh.pre_update_or_insert(leaf);
                 }
 
-                let (qbvh, workspace) = data.split_borrow();
-                qbvh.refit(0.01, workspace, |leaf| {
-                    // TODO replace pos_cache with position info in leaves_to_entities?
-                    if let Some(pos) = pos_cache.get(&leaf) {
-                        let pos = Point::new(pos.x, pos.y);
-                        Aabb::new(pos, pos)
-                    } else {
-                        Aabb::new_invalid()
-                    }
-                });
-                qbvh.rebalance(0.01, workspace);
+                data.rebalance();
             }
         });
 
@@ -79,6 +78,8 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
                     data.leaves_to_entities.remove(leaf);
                 }
             }
+
+            data.rebalance();
         }
     });
 
@@ -101,7 +102,7 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
                     let mut closest_distance = search_radius;
                     for result_leaf in query_results.iter().copied() {
                         let result = match data.leaves_to_entities.get(result_leaf) {
-                            Some(result) => *result,
+                            Some((result, _aabb)) => *result,
                             None => continue,
                         };
 

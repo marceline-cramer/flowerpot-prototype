@@ -22,6 +22,9 @@ use components::*;
 
 mod partitioning;
 
+const SOIL_COLOR: Vec4 = Vec4::new(0.13, 0.07, 0.05, 1.0);
+const GRASS_COLOR: Vec4 = Vec4::new(0.39, 0.67, 0.2, 1.0);
+
 pub enum OrdinalDirection {
     West,
     North,
@@ -72,7 +75,7 @@ fn spawn_grass(tile: EntityId) -> EntityId {
         .with(sustenance(), 0.1)
         .with_default(cube())
         .with(scale(), Vec3::splat(0.25))
-        .with(color(), Vec4::new(0.0, 1.0, 0.0, 1.0))
+        .with(color(), GRASS_COLOR)
         .with(
             map_position(),
             entity::get_component(tile, map_position()).unwrap(),
@@ -172,21 +175,11 @@ pub fn main() {
         }
     });
 
-    // spawn a ground plane
-    let map_width = 32;
-    let map_height = 32;
-    let map_dims = ivec2(map_width, map_height).as_vec2();
-    Entity::new()
-        .with_merge(make_transformable())
-        .with(translation(), (map_dims / 2.0).extend(0.0))
-        .with(scale(), (map_dims + 1.0).extend(1.0))
-        .with_default(quad())
-        .with(color(), Vec4::new(0.2, 1.0, 0.0, 1.0))
-        .spawn();
-
     // spawn some initial tiles and store their IDs
     let mut rng = rand::thread_rng();
     let mut map = HashMap::new();
+    let map_width = 32;
+    let map_height = 32;
     for x in 0..map_width {
         for y in 0..map_height {
             let xy = IVec2::new(x, y);
@@ -194,6 +187,7 @@ pub fn main() {
             let tile = Entity::new()
                 .with_merge(make_transformable())
                 .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
+                .with_default(quad())
                 .with_default(tile())
                 .with_default(soil())
                 .with(map_position(), xy.as_vec2())
@@ -234,6 +228,26 @@ pub fn main() {
         search_small_crop_radius(),
         search_small_crop_result(),
     );
+
+    // color soil tiles correctly
+    spawn_query((tile(), soil()))
+        .excludes(small_crop_occupant())
+        .bind(move |tiles| {
+            for (e, (_, _)) in tiles {
+                entity::add_component(e, color(), SOIL_COLOR);
+            }
+        });
+
+    // color tiles with small crops correctly
+    change_query((tile(), small_crop_occupant()))
+        .track_change(small_crop_occupant())
+        .bind(move |tiles| {
+            for (e, (_, small_crop)) in tiles {
+                if let Some(new_color) = entity::get_component(small_crop, color()) {
+                    entity::add_component(e, color(), new_color);
+                }
+            }
+        });
 
     // decrease fullness by hunger rate
     query((fullness(), hunger_rate())).each_frame(|entities| {

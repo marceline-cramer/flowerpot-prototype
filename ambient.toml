@@ -171,6 +171,40 @@ name = "SearchSmallCropResult"
 description = "The result of a search for small crops."
 attributes = ["Debuggable"]
 
+[components.player_head_ref]
+type = "EntityId"
+name = "PlayerHeadRef"
+description = "The player's head."
+attributes = ["Debuggable"]
+
+[components.player_movement_direction]
+type = "Vec2"
+atttributes = ["Debuggable"]
+
+[components.player_yaw]
+type = "F32"
+attributes = ["Debuggable"]
+
+[components.player_pitch]
+type = "F32"
+attributes = ["Debuggable"]
+
 [messages.grow_tick]
 description = "Grows flora."
 fields = {}
+
+[messages.player_movement_input]
+name = "PlayerMovementInput"
+description = "Client-to-server message to set the movement state of a player."
+
+[messages.player_movement_input.fields.yaw]
+type = "F32"
+description = "The new yaw (in radians) of the player."
+
+[messages.player_movement_input.fields.pitch]
+type = "F32"
+description = "The new pitch (in radians) of the player."
+
+[messages.player_movement_input.fields.direction]
+type = "Vec2"
+description = "The movement direction of the player relative to the yaw. This is normalized to unit length."

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
+use ambient_api::ecs::SupportedValue;
 use ambient_api::prelude::*;
 use parry2d::{bounding_volume::Aabb, math::Point, partitioning::*};
 use slab::Slab;
@@ -20,8 +21,8 @@ impl PartitioningData {
     }
 }
 
-pub fn init_qbvh(
-    searchable_component: Component<()>,
+pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
+    searchable_component: Component<SearchableData>,
     search_radius_component: Component<f32>,
     result_component: Component<EntityId>,
 ) {

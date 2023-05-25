@@ -10,10 +10,10 @@ use ambient_api::{
         camera::aspect_ratio_from_window,
         prefab::prefab_from_url,
         primitives::{cube, quad},
-        transform::{lookat_target, translation},
+        transform::translation,
     },
     concepts::{make_perspective_infinite_reverse_camera, make_transformable},
-    glam::{ivec2, IVec2},
+    glam::IVec2,
     prelude::*,
     rand,
 };
@@ -64,27 +64,6 @@ impl OrdinalDirection {
         let neighbor = self.as_neighbor_component();
         entity::get_component(tile, neighbor)
     }
-}
-
-// TODO make this a concept (?)
-fn spawn_grass(tile: EntityId) -> EntityId {
-    let grass = Entity::new()
-        .with_merge(make_transformable())
-        .with_default(small_crop())
-        .with_default(grass())
-        .with(sustenance(), 0.1)
-        .with_default(cube())
-        .with(scale(), Vec3::splat(0.25))
-        .with(color(), GRASS_COLOR)
-        .with(
-            map_position(),
-            entity::get_component(tile, map_position()).unwrap(),
-        )
-        .spawn();
-
-    entity::add_component(tile, small_crop_occupant(), grass);
-
-    grass
 }
 
 fn for_random_neighbors<T>(
@@ -175,6 +154,13 @@ pub fn main() {
         }
     });
 
+    // create a grass small crop prototype
+    let grass = Entity::new()
+        .with_default(small_crop())
+        .with(sustenance(), 0.1)
+        .with(color(), GRASS_COLOR)
+        .spawn();
+
     // spawn some initial tiles and store their IDs
     let mut rng = rand::thread_rng();
     let mut map = HashMap::new();
@@ -190,10 +176,10 @@ pub fn main() {
                 .with_default(quad())
                 .with_default(tile())
                 .with_default(soil())
+                .with(small_crop_occupant(), grass)
                 .with(map_position(), xy.as_vec2())
                 .spawn();
 
-            spawn_grass(tile);
             map.insert(xy, tile);
         }
     }
@@ -224,7 +210,7 @@ pub fn main() {
 
     // init small crop searching
     partitioning::init_qbvh(
-        small_crop(),
+        small_crop_occupant(),
         search_small_crop_radius(),
         search_small_crop_result(),
     );
@@ -316,7 +302,6 @@ pub fn main() {
                     if let Some(sustenance) = entity::get_component(small_crop, sustenance()) {
                         let new_fullness = old_fullness + sustenance;
                         entity::set_component(e, fullness(), new_fullness);
-                        entity::despawn(small_crop);
                         entity::remove_component(tile, small_crop_occupant());
                     }
                 }
@@ -418,9 +403,13 @@ pub fn main() {
             };
 
             let target_delta = target_pos - map_pos;
-            let movement_delta = target_delta.clamp_length(0.0, movement_distance);
+            let movement_delta = target_delta.clamp_length_max(movement_distance);
             let movement_theta = -movement_delta.angle_between(Vec2::Y);
             let new_stamina = old_stamina - movement_cost;
+
+            if !movement_theta.is_finite() {
+                continue;
+            }
 
             let components = Entity::new()
                 .with(rotation(), Quat::from_rotation_z(movement_theta))
@@ -435,18 +424,20 @@ pub fn main() {
         }
     });
 
-    let grass_grow = query((grass(), on_tile())).build();
-    let mut rng = rand::thread_rng();
-    messages::GrowTick::subscribe(move |_, _| {
-        for (_e, (_grass, tile)) in grass_grow.evaluate() {
-            for_random_neighbors(&mut rng, tile, |neighbor| {
-                if entity::has_component(neighbor, small_crop_occupant()) {
-                    None
-                } else {
-                    spawn_grass(neighbor);
-                    Some(())
-                }
-            });
+    messages::GrowTick::subscribe({
+        let growable_query = query((tile(), small_crop_occupant())).build();
+        let mut rng = rand::thread_rng();
+        move |_, _| {
+            for (tile, (_, small_crop)) in growable_query.evaluate() {
+                for_random_neighbors(&mut rng, tile, |neighbor| {
+                    if entity::has_component(neighbor, small_crop_occupant()) {
+                        None
+                    } else {
+                        entity::add_component(neighbor, small_crop_occupant(), small_crop);
+                        Some(())
+                    }
+                });
+            }
         }
     });
 

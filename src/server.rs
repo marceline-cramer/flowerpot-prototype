@@ -154,10 +154,10 @@ pub fn main() {
         }
     });
 
-    // create a grass small crop prototype
+    // create a grass cover crop prototype
     let grass = Entity::new()
-        .with_default(small_crop())
-        .with(sustenance(), 0.1)
+        .with_default(cover_crop())
+        .with(sustenance(), 2.0)
         .with(color(), GRASS_COLOR)
         .spawn();
 
@@ -176,7 +176,7 @@ pub fn main() {
                 .with_default(quad())
                 .with_default(tile())
                 .with_default(soil())
-                .with(small_crop_occupant(), grass)
+                .with(cover_crop_occupant(), grass)
                 .with(map_position(), xy.as_vec2())
                 .spawn();
 
@@ -208,28 +208,28 @@ pub fn main() {
         }
     }
 
-    // init small crop searching
+    // init cover crop searching
     partitioning::init_qbvh(
-        small_crop_occupant(),
-        search_small_crop_radius(),
-        search_small_crop_result(),
+        cover_crop_occupant(),
+        search_cover_crop_radius(),
+        search_cover_crop_result(),
     );
 
     // color soil tiles correctly
     spawn_query((tile(), soil()))
-        .excludes(small_crop_occupant())
+        .excludes(cover_crop_occupant())
         .bind(move |tiles| {
             for (e, (_, _)) in tiles {
                 entity::add_component(e, color(), SOIL_COLOR);
             }
         });
 
-    // color tiles with small crops correctly
-    change_query((tile(), small_crop_occupant()))
-        .track_change(small_crop_occupant())
+    // color tiles with cover crops correctly
+    change_query((tile(), cover_crop_occupant()))
+        .track_change(cover_crop_occupant())
         .bind(move |tiles| {
-            for (e, (_, small_crop)) in tiles {
-                if let Some(new_color) = entity::get_component(small_crop, color()) {
+            for (e, (_, cover_crop)) in tiles {
+                if let Some(new_color) = entity::get_component(cover_crop, color()) {
                     entity::add_component(e, color(), new_color);
                 }
             }
@@ -293,21 +293,6 @@ pub fn main() {
             }
         });
 
-    // when bunnies move they consume small crops and restore hunger
-    change_query((bunny(), on_tile(), fullness()))
-        .track_change(on_tile())
-        .bind(|changes| {
-            for (e, (_bunny, tile, old_fullness)) in changes {
-                if let Some(small_crop) = entity::get_component(tile, small_crop_occupant()) {
-                    if let Some(sustenance) = entity::get_component(small_crop, sustenance()) {
-                        let new_fullness = old_fullness + sustenance;
-                        entity::set_component(e, fullness(), new_fullness);
-                        entity::remove_component(tile, small_crop_occupant());
-                    }
-                }
-            }
-        });
-
     // step moving entities
     query((
         movement_step(),
@@ -362,7 +347,7 @@ pub fn main() {
             .with(passive_metabolism(), 1.0)
             .with(movement_cost(), rng.gen_range(0.4..0.6))
             .with(movement_distance(), 0.5)
-            .with(search_small_crop_radius(), 10.0)
+            .with(search_cover_crop_radius(), 10.0)
             .with(
                 map_position(),
                 entity::get_component(*tile, map_position()).unwrap(),
@@ -377,21 +362,46 @@ pub fn main() {
     query((
         fauna(),
         map_position(),
+        on_tile(),
         stamina(),
+        fullness(),
         movement_cost(),
         movement_distance(),
-        search_small_crop_result(),
+        search_cover_crop_result(),
     ))
     .excludes(movement_step())
     .each_frame(|entities| {
-        for (e, (_fauna, map_pos, old_stamina, movement_cost, movement_distance, search_result)) in
-            entities
+        for (
+            e,
+            (
+                _fauna,
+                map_pos,
+                tile,
+                old_stamina,
+                old_fullness,
+                movement_cost,
+                movement_distance,
+                search_result,
+            ),
+        ) in entities
         {
             if old_stamina < movement_cost {
                 continue;
             }
 
-            entity::remove_component(e, search_small_crop_result());
+            entity::remove_component(e, search_cover_crop_result());
+
+            let new_stamina = old_stamina - movement_cost;
+            entity::set_component(e, stamina(), new_stamina);
+
+            if let Some(cover_crop) = entity::get_component(tile, cover_crop_occupant()) {
+                if let Some(sustenance) = entity::get_component(cover_crop, sustenance()) {
+                    let new_fullness = old_fullness + sustenance;
+                    entity::set_component(e, fullness(), new_fullness);
+                    entity::remove_component(tile, cover_crop_occupant());
+                    continue;
+                }
+            }
 
             if search_result.is_null() {
                 continue;
@@ -405,7 +415,6 @@ pub fn main() {
             let target_delta = target_pos - map_pos;
             let movement_delta = target_delta.clamp_length_max(movement_distance);
             let movement_theta = -movement_delta.angle_between(Vec2::Y);
-            let new_stamina = old_stamina - movement_cost;
 
             if !movement_theta.is_finite() {
                 continue;
@@ -417,23 +426,22 @@ pub fn main() {
                 .with(movement_duration(), 0.25)
                 .with(movement_start(), map_pos)
                 .with(movement_target(), map_pos + movement_delta)
-                .with(movement_height(), 0.5)
-                .with(stamina(), new_stamina);
+                .with(movement_height(), 0.5);
 
             entity::add_components(e, components);
         }
     });
 
     messages::GrowTick::subscribe({
-        let growable_query = query((tile(), small_crop_occupant())).build();
+        let growable_query = query((tile(), cover_crop_occupant())).build();
         let mut rng = rand::thread_rng();
         move |_, _| {
-            for (tile, (_, small_crop)) in growable_query.evaluate() {
+            for (tile, (_, cover_crop)) in growable_query.evaluate() {
                 for_random_neighbors(&mut rng, tile, |neighbor| {
-                    if entity::has_component(neighbor, small_crop_occupant()) {
+                    if entity::has_component(neighbor, cover_crop_occupant()) {
                         None
                     } else {
-                        entity::add_component(neighbor, small_crop_occupant(), small_crop);
+                        entity::add_component(neighbor, cover_crop_occupant(), cover_crop);
                         Some(())
                     }
                 });

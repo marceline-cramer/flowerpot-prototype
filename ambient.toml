@@ -39,16 +39,16 @@ name = "soil"
 description = "A tag belonging to all soil tiles."
 attributes = ["Debuggable"]
 
-[components.small_crop_occupant]
+[components.cover_crop_occupant]
 type = "EntityId"
 name = "FaunaOccupant"
-description = "The entity ID of the small crop class occupying this tile."
+description = "The entity ID of the cover crop class occupying this tile."
 attributes = ["Debuggable"]
 
-[components.small_crop]
+[components.cover_crop]
 type = "Empty"
 name = "SmallCrop"
-description = "A tag given to all small crop entities."
+description = "A tag given to all cover crop entities."
 attributes = ["Debuggable"]
 
 [components.sustenance]
@@ -132,7 +132,7 @@ attributes = ["Debuggable"]
 [components.bunny]
 type = "Empty"
 name = "Bunny"
-description = "An herbivorous bunny rabbit that eats small crops."
+description = "An herbivorous bunny rabbit that eats cover crops."
 attributes = ["Debuggable"]
 
 [components.movement_distance]
@@ -153,16 +153,16 @@ name = "HungerRate"
 description = "The rate at which this entity's fullness is depleted per second."
 attributes = ["Debuggable"]
 
-[components.search_small_crop_radius]
+[components.search_cover_crop_radius]
 type = "F32"
 name = "SearchSmallCropRadius"
-description = "The search radius to search for small crops in."
+description = "The search radius to search for cover crops in."
 attributes = ["Debuggable"]
 
-[components.search_small_crop_result]
+[components.search_cover_crop_result]
 type = "EntityId"
 name = "SearchSmallCropResult"
-description = "The result of a search for small crops."
+description = "The result of a search for cover crops."
 attributes = ["Debuggable"]
 
 [components.player_head_ref]

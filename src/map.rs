@@ -181,6 +181,9 @@ pub fn init_map() {
             }
         });
 
+    // TODO make bunnies fun to code and important to gameplay
+    return;
+
     // spawn some bunnies
     for tile in map
         .values()

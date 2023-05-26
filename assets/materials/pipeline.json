@@ -1,0 +1,23 @@
+[
+  {
+    "pipeline": {
+      "type": "Materials",
+      "importer": {
+        "type": "Single",
+        "name": "soil",
+        "base_color": "soil.png"
+      },
+      "output_quads": true
+    }
+  },
+  {
+    "pipeline": {
+      "type": "Materials",
+      "importer": {
+        "type": "Single",
+        "name": "grass",
+        "base_color": "grass.png"
+      }
+    }
+  }
+]

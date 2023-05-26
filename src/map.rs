@@ -10,9 +10,6 @@ use ambient_api::{
 
 use crate::components::*;
 
-const SOIL_COLOR: Vec4 = Vec4::new(0.13, 0.07, 0.05, 1.0);
-const GRASS_COLOR: Vec4 = Vec4::new(0.39, 0.67, 0.2, 1.0);
-
 pub enum OrdinalDirection {
     West,
     North,
@@ -80,7 +77,10 @@ pub fn init_map() {
     let grass = Entity::new()
         .with_default(cover_crop())
         .with(sustenance(), 2.0)
-        .with(color(), GRASS_COLOR)
+        .with(
+            pbr_material_from_url(),
+            asset::url("assets/materials/materials/pipeline.json/1/mat.json").unwrap(),
+        )
         .spawn();
 
     // spawn some initial tiles and store their IDs
@@ -142,22 +142,26 @@ pub fn init_map() {
             }
         });
 
-    // color soil tiles correctly
+    // set soil tiles material
     spawn_query((tile(), soil()))
         .excludes(cover_crop_occupant())
         .bind(move |tiles| {
             for (e, (_, _)) in tiles {
-                entity::add_component(e, color(), SOIL_COLOR);
+                entity::set_component(
+                    e,
+                    pbr_material_from_url(),
+                    asset::url("assets/materials/materials/pipeline.json/0/mat.json").unwrap(),
+                );
             }
         });
 
-    // color tiles with cover crops correctly
+    // update materials of tiles with cover crops
     change_query((tile(), cover_crop_occupant()))
         .track_change(cover_crop_occupant())
         .bind(move |tiles| {
             for (e, (_, cover_crop)) in tiles {
-                if let Some(new_color) = entity::get_component(cover_crop, color()) {
-                    entity::add_component(e, color(), new_color);
+                if let Some(new_mat) = entity::get_component(cover_crop, pbr_material_from_url()) {
+                    entity::add_component(e, pbr_material_from_url(), new_mat);
                 }
             }
         });

@@ -9,6 +9,8 @@ version = "0.0.1"
 ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "cf45f3e" }
 parry2d = "0.13"
 slab = "0.4"
+rand_chacha = "0.3.1"
+palette = "0.7.2"
 
 [[bin]]
 name = "client_flowerpot_prototype"

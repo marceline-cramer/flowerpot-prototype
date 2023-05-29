@@ -93,7 +93,7 @@ pub fn init_fauna() {
 
             let target_delta = target_pos - map_pos;
             let movement_delta = target_delta.clamp_length_max(movement_distance);
-            let movement_theta = -movement_delta.angle_between(Vec2::Y);
+            let movement_theta = -movement_delta.angle_between(-Vec2::X);
 
             if !movement_theta.is_finite() {
                 continue;

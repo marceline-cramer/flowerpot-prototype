@@ -455,6 +455,7 @@ dependencies = [
  "ambient_api",
  "palette",
  "parry2d",
+ "rand",
  "rand_chacha",
  "slab",
 ]

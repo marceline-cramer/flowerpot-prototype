@@ -1,4 +1,3 @@
-The following assets are licensed under CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
-They belong to Assets from Everything Library © David OReilly.
-https://www.davidoreilly.com/library
-- rabbit.fbx
+The following assets are licensed under CC0 (https://creativecommons.org/publicdomain/zero/1.0)
+Source: https://mordrag.itch.io/low-poly-animals
+- rabbit.glb

@@ -6,7 +6,7 @@ publish = false
 version = "0.0.1"
 
 [dependencies]
-ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "cf45f3e" }
+ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "22dd65f" }
 parry2d = "0.13"
 slab = "0.4"
 rand_chacha = "0.3.1"

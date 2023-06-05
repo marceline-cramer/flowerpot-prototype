@@ -4,6 +4,7 @@ use components::*;
 
 mod crop;
 mod fauna;
+mod items;
 mod map;
 mod partitioning;
 mod player;
@@ -43,6 +44,7 @@ pub fn main() {
 
     crop::init_crops();
     fauna::init_fauna();
+    items::init_items();
     map::init_map();
     player::init_players();
 }

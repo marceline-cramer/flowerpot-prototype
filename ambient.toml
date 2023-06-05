@@ -238,3 +238,8 @@ description = "The new pitch (in radians) of the player."
 [messages.player_movement_input.fields.direction]
 type = "Vec2"
 description = "The movement direction of the player relative to the yaw. This is normalized to unit length."
+
+[messages.player_craft_input]
+name = "PlayerCraftInput"
+description = "Message sent when a player attempts to craft the two held items."
+fields = {}

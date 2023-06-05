@@ -183,12 +183,12 @@ attributes = ["Debuggable"]
 type = "F32"
 attributes = ["Debuggable"]
 
-[components.player_left_hand]
-type = "Empty"
+[components.player_left_hand_ref]
+type = "EntityId"
 attributes = ["Debuggable", "Networked"]
 
-[components.player_right_hand]
-type = "Empty"
+[components.player_right_hand_ref]
+type = "EntityId"
 attributes = ["Debuggable", "Networked"]
 
 [components.player_hand_held_item_ref]

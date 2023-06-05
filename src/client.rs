@@ -7,6 +7,7 @@ pub fn main() {
     let mut cursor_lock = input::CursorLockGuard::new(true);
     let mut pitch = 0.0;
     let mut yaw = 0.0;
+    let mut craft_last = false;
     ambient_api::messages::Frame::subscribe(move |_| {
         let input = input::get();
         if !cursor_lock.auto_unlock_on_escape(&input) {
@@ -36,5 +37,12 @@ pub fn main() {
         pitch = (pitch + input.mouse_delta.y * pitch_factor).clamp(-FRAC_PI_2, FRAC_PI_2);
 
         messages::PlayerMovementInput::new(direction, pitch, yaw).send_server_reliable();
+
+        let craft_pressed = input.keys.contains(&KeyCode::Q);
+        if !craft_last && craft_pressed {
+            messages::PlayerCraftInput::new().send_server_reliable();
+        }
+
+        craft_last = craft_pressed;
     });
 }

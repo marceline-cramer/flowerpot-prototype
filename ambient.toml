@@ -183,6 +183,42 @@ attributes = ["Debuggable"]
 type = "F32"
 attributes = ["Debuggable"]
 
+[components.player_left_hand]
+type = "Empty"
+attributes = ["Debuggable", "Networked"]
+
+[components.player_right_hand]
+type = "Empty"
+attributes = ["Debuggable", "Networked"]
+
+[components.player_hand_held_item_ref]
+type = "EntityId"
+attributes = ["Debuggable", "Networked"]
+
+[components.crafting]
+name = "Crafting"
+description = "All components related to crafting."
+
+[components."crafting::recipe"]
+type = "Empty"
+attributes = ["Debuggable"]
+
+[components."crafting::primary_ingredient"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
+[components."crafting::secondary_ingredient"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
+[components."crafting::primary_yield"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
+[components."crafting::secondary_yield"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
 [messages.grow_tick]
 description = "Grows flora."
 fields = {}

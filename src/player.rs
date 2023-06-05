@@ -16,12 +16,30 @@ pub fn init_players() {
                 .with_merge(make_perspective_infinite_reverse_camera())
                 .with(aspect_ratio_from_window(), EntityId::resources())
                 .with_default(main_scene())
-                .with(user_id(), uid)
+                .with(user_id(), uid.clone())
                 .with(translation(), Vec3::Z * 1.5)
                 .with(parent(), e)
                 .with_default(local_to_parent())
                 .with(rotation(), Quat::from_rotation_x(FRAC_PI_2))
                 .spawn();
+
+            let make_hand = |offset| {
+                Entity::new()
+                    .with_default(main_scene())
+                    .with(user_id(), uid.clone())
+                    .with(parent(), head)
+                    .with_default(local_to_parent())
+                    .with(translation(), offset)
+                    .with(rotation(), Quat::IDENTITY)
+                    .with(scale(), Vec3::splat(0.1))
+                    .with_default(cube())
+                    .spawn()
+            };
+
+            let left_hand = make_hand(Vec3::new(-0.5, -0.4, 1.0));
+            let right_hand = make_hand(Vec3::new(0.5, -0.4, 1.0));
+
+            entity::add_component(head, children(), vec![left_hand, right_hand]);
 
             entity::add_components(
                 e,

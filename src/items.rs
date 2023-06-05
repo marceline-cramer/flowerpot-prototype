@@ -5,7 +5,10 @@ use std::{
 
 use ambient_api::prelude::*;
 
-use crate::components::{crafting::*, player_hand_held_item_ref};
+use crate::components::{
+    crafting::*, player_hand_held_item_ref, player_head_ref, player_left_hand_ref,
+    player_right_hand_ref,
+};
 
 lazy_static::lazy_static! {
     pub static ref BLUE_ITEM: EntityId = Entity::new()
@@ -47,18 +50,22 @@ impl RecipeStore {
         first_ingredient: EntityId,
         second_ingredient: EntityId,
     ) -> Option<(&CraftingRecipe, bool)> {
-        if let Some(recipe) = self
-            .recipes
-            .get(&(first_ingredient, Some(second_ingredient)))
         {
-            return Some((recipe, false));
-        }
+            let mut first_ingredient = first_ingredient;
+            let mut second_ingredient = second_ingredient;
 
-        if let Some(recipe) = self
-            .recipes
-            .get(&(second_ingredient, Some(first_ingredient)))
-        {
-            return Some((recipe, true));
+            let mut second_is_primary = false;
+            if second_ingredient < first_ingredient {
+                std::mem::swap(&mut first_ingredient, &mut second_ingredient);
+                second_is_primary = true;
+            }
+
+            if let Some(recipe) = self
+                .recipes
+                .get(&(first_ingredient, Some(second_ingredient)))
+            {
+                return Some((recipe, second_is_primary));
+            }
         }
 
         if let Some(recipe) = self.recipes.get(&(first_ingredient, None)) {
@@ -114,7 +121,9 @@ pub fn init_items() {
 
                 // sort ingredient entity IDs to deduplicate swapped recipes
                 if let Some(secondary_ingredient) = secondary_ingredient.as_mut() {
-                    std::mem::swap(&mut primary_ingredient, secondary_ingredient);
+                    if *secondary_ingredient < primary_ingredient {
+                        std::mem::swap(&mut primary_ingredient, secondary_ingredient);
+                    }
                 }
 
                 let recipe = CraftingRecipe {
@@ -149,11 +158,34 @@ pub fn init_items() {
             }
         });
 
+    crate::messages::PlayerCraftInput::subscribe({
+        let store = store.clone();
+        move |source, _| {
+            let Some(player_entity) = source.client_entity_id() else { return; };
+            let Some(player_head) = entity::get_component(player_entity, player_head_ref()) else { return; };
+            let Some(left_hand) = entity::get_component(player_head, player_left_hand_ref()) else { return; };
+            let Some(right_hand) = entity::get_component(player_head, player_right_hand_ref()) else { return; };
+
+            let left_held =
+                entity::get_component(left_hand, player_hand_held_item_ref()).unwrap_or_default();
+
+            let right_held =
+                entity::get_component(right_hand, player_hand_held_item_ref()).unwrap_or_default();
+
+            let store = store.lock().unwrap();
+            if let Some((new_left_held, new_right_held)) = store.apply_craft(left_held, right_held)
+            {
+                entity::add_component(left_hand, player_hand_held_item_ref(), new_left_held);
+                entity::add_component(right_hand, player_hand_held_item_ref(), new_right_held);
+            }
+        }
+    });
+
     // temp crafting recipe
     Entity::new()
         .with_default(recipe())
         .with(primary_ingredient(), *BLUE_ITEM)
-        .with(secondary_ingredient(), *GREEN_ITEM)
-        .with(primary_yield(), *YELLOW_ITEM)
+        .with(secondary_ingredient(), *YELLOW_ITEM)
+        .with(primary_yield(), *GREEN_ITEM)
         .spawn();
 }

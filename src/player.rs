@@ -23,21 +23,32 @@ pub fn init_players() {
                 .with(rotation(), Quat::from_rotation_x(FRAC_PI_2))
                 .spawn();
 
-            let make_hand = |offset| {
+            let make_hand = |offset, hand, held| {
                 Entity::new()
                     .with_default(main_scene())
                     .with(user_id(), uid.clone())
                     .with(parent(), head)
+                    .with_default(hand)
                     .with_default(local_to_parent())
                     .with(translation(), offset)
                     .with(rotation(), Quat::IDENTITY)
                     .with(scale(), Vec3::splat(0.1))
                     .with_default(cube())
+                    .with(player_hand_held_item_ref(), held)
                     .spawn()
             };
 
-            let left_hand = make_hand(Vec3::new(-0.5, -0.4, 1.0));
-            let right_hand = make_hand(Vec3::new(0.5, -0.4, 1.0));
+            let left_hand = make_hand(
+                Vec3::new(-0.5, -0.4, 1.0),
+                crate::components::player_left_hand(),
+                *crate::items::BLUE_ITEM,
+            );
+
+            let right_hand = make_hand(
+                Vec3::new(0.5, -0.4, 1.0),
+                crate::components::player_right_hand(),
+                *crate::items::YELLOW_ITEM,
+            );
 
             entity::add_component(head, children(), vec![left_hand, right_hand]);
 

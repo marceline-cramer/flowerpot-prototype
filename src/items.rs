@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use ambient_api::prelude::*;
+use ambient_api::{components::core::primitives::cube, prelude::*};
 
 use crate::components::{
     crafting::*, player_hand_held_item_ref, player_head_ref, player_left_hand_ref,
@@ -28,14 +28,14 @@ lazy_static::lazy_static! {
 pub struct CraftingRecipe {
     pub recipe_entity: EntityId,
     pub primary_ingredient: EntityId,
-    pub secondary_ingredient: Option<EntityId>,
+    pub secondary_ingredient: EntityId,
     pub primary_yield: EntityId,
-    pub secondary_yield: Option<EntityId>,
+    pub secondary_yield: EntityId,
 }
 
 /// The set of all available crafting recipes.
 pub struct RecipeStore {
-    recipes: HashMap<(EntityId, Option<EntityId>), CraftingRecipe>,
+    recipes: HashMap<(EntityId, EntityId), CraftingRecipe>,
 }
 
 impl RecipeStore {
@@ -47,36 +47,16 @@ impl RecipeStore {
 
     pub fn match_ingredients(
         &self,
-        first_ingredient: EntityId,
-        second_ingredient: EntityId,
+        left_ingredient: EntityId,
+        right_ingredient: EntityId,
     ) -> Option<(&CraftingRecipe, bool)> {
-        {
-            let mut first_ingredient = first_ingredient;
-            let mut second_ingredient = second_ingredient;
-
-            let mut second_is_primary = false;
-            if second_ingredient < first_ingredient {
-                std::mem::swap(&mut first_ingredient, &mut second_ingredient);
-                second_is_primary = true;
-            }
-
-            if let Some(recipe) = self
-                .recipes
-                .get(&(first_ingredient, Some(second_ingredient)))
-            {
-                return Some((recipe, second_is_primary));
-            }
+        if let Some(recipe) = self.recipes.get(&(left_ingredient, right_ingredient)) {
+            Some((recipe, false))
+        } else if let Some(recipe) = self.recipes.get(&(right_ingredient, left_ingredient)) {
+            Some((recipe, true))
+        } else {
+            None
         }
-
-        if let Some(recipe) = self.recipes.get(&(first_ingredient, None)) {
-            return Some((recipe, false));
-        }
-
-        if let Some(recipe) = self.recipes.get(&(second_ingredient, None)) {
-            return Some((recipe, true));
-        }
-
-        None
     }
 
     pub fn apply_craft(
@@ -85,23 +65,10 @@ impl RecipeStore {
         right_held: EntityId,
     ) -> Option<(EntityId, EntityId)> {
         let (recipe, right_is_primary) = self.match_ingredients(left_held, right_held)?;
-
         if !right_is_primary {
-            let new_second_held = if recipe.secondary_ingredient.is_none() {
-                recipe.secondary_yield.unwrap_or(EntityId::null())
-            } else {
-                right_held
-            };
-
-            Some((recipe.primary_yield, new_second_held))
+            Some((recipe.primary_yield, recipe.secondary_yield))
         } else {
-            let new_first_held = if recipe.secondary_ingredient.is_none() {
-                recipe.secondary_ingredient.unwrap_or(EntityId::null())
-            } else {
-                left_held
-            };
-
-            Some((new_first_held, recipe.primary_yield))
+            Some((recipe.secondary_yield, recipe.primary_yield))
         }
     }
 }
@@ -111,21 +78,22 @@ pub fn init_items() {
     let store = RecipeStore::new();
     let store = Arc::new(Mutex::new(store));
 
-    spawn_query((recipe(), primary_ingredient(), primary_yield())).bind({
+    spawn_query((
+        recipe(),
+        primary_ingredient(),
+        secondary_ingredient(),
+        primary_yield(),
+        secondary_yield(),
+    ))
+    .bind({
         let store = store.clone();
         move |recipes| {
             let mut store = store.lock().unwrap();
-            for (e, (_recipe, mut primary_ingredient, primary_yield)) in recipes {
-                let mut secondary_ingredient = entity::get_component(e, secondary_ingredient());
-                let secondary_yield = entity::get_component(e, secondary_yield());
-
-                // sort ingredient entity IDs to deduplicate swapped recipes
-                if let Some(secondary_ingredient) = secondary_ingredient.as_mut() {
-                    if *secondary_ingredient < primary_ingredient {
-                        std::mem::swap(&mut primary_ingredient, secondary_ingredient);
-                    }
-                }
-
+            for (
+                e,
+                (_recipe, primary_ingredient, secondary_ingredient, primary_yield, secondary_yield),
+            ) in recipes
+            {
                 let recipe = CraftingRecipe {
                     recipe_entity: e,
                     primary_ingredient,
@@ -136,7 +104,11 @@ pub fn init_items() {
 
                 let recipe_key = (primary_ingredient, secondary_ingredient);
 
-                if store.recipes.contains_key(&recipe_key) {
+                if store.recipes.contains_key(&recipe_key)
+                    || store
+                        .recipes
+                        .contains_key(&(secondary_ingredient, primary_ingredient))
+                {
                     eprintln!("Duplicate crafting recipe");
                     continue;
                 }
@@ -146,15 +118,19 @@ pub fn init_items() {
         }
     });
 
-    // TODO these should run client-side.
+    // TODO this should run client-side.
     change_query(player_hand_held_item_ref())
         .track_change(player_hand_held_item_ref())
         .bind(move |changes| {
-            for (e, item) in changes {
-                let new_color =
-                    entity::get_component(item, color()).unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
-
-                entity::add_component(e, color(), new_color);
+            for (hand, item) in changes {
+                if item.is_null() {
+                    entity::remove_component(hand, cube());
+                } else {
+                    let item_color = entity::get_component(item, color());
+                    let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
+                    entity::add_component(hand, cube(), ());
+                    entity::add_component(hand, color(), new_color);
+                }
             }
         });
 
@@ -187,5 +163,6 @@ pub fn init_items() {
         .with(primary_ingredient(), *BLUE_ITEM)
         .with(secondary_ingredient(), *YELLOW_ITEM)
         .with(primary_yield(), *GREEN_ITEM)
+        .with(secondary_yield(), EntityId::null())
         .spawn();
 }

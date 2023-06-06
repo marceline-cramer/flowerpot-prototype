@@ -44,7 +44,7 @@ pub fn main() {
 
     crop::init_crops();
     fauna::init_fauna();
-    items::init_items();
+    items::init_server_items();
     map::init_map();
     player::init_players();
 }

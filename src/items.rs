@@ -70,8 +70,9 @@ impl RecipeStore {
     }
 }
 
-/// Sets up item- and crafting-related systems.
-pub fn init_items() {
+/// Sets up server-side item- and crafting-related systems.
+#[cfg(feature = "server")]
+pub fn init_server_items() {
     let store = RecipeStore::new();
     let store = Arc::new(Mutex::new(store));
 
@@ -115,33 +116,6 @@ pub fn init_items() {
         }
     });
 
-    // TODO this should run client-side.
-    change_query((player::held_item_ref(), user_id()))
-        .track_change(player::held_item_ref())
-        .bind(move |changes| {
-            for (hand, (item, uid)) in changes {
-                for child in entity::get_component(hand, children()).unwrap_or_default() {
-                    entity::despawn_recursive(child);
-                }
-
-                if item.is_null() {
-                    continue;
-                }
-
-                let item_color = entity::get_component(item, color());
-                let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
-
-                let item_instance = Entity::new()
-                    .with_default(local_to_parent())
-                    .with_default(cube())
-                    .with(color(), new_color)
-                    .with(user_id(), uid)
-                    .spawn();
-
-                entity::add_child(hand, item_instance);
-            }
-        });
-
     crate::messages::PlayerCraftInput::subscribe({
         let store = store.clone();
         move |source, _| {
@@ -173,4 +147,34 @@ pub fn init_items() {
         .with(primary_yield(), *GREEN_ITEM)
         .with(secondary_yield(), EntityId::null())
         .spawn();
+}
+
+/// Inits client-side item- and crafting-related systems.
+#[cfg(feature = "client")]
+pub fn init_client_items() {
+    change_query((player::held_item_ref(), user_id()))
+        .track_change(player::held_item_ref())
+        .bind(move |changes| {
+            for (hand, (item, uid)) in changes {
+                for child in entity::get_component(hand, children()).unwrap_or_default() {
+                    entity::despawn_recursive(child);
+                }
+
+                if item.is_null() {
+                    continue;
+                }
+
+                let item_color = entity::get_component(item, color());
+                let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
+
+                let item_instance = Entity::new()
+                    .with_default(local_to_parent())
+                    .with_default(cube())
+                    .with(color(), new_color)
+                    .with(user_id(), uid)
+                    .spawn();
+
+                entity::add_child(hand, item_instance);
+            }
+        });
 }

@@ -118,9 +118,8 @@ pub fn init_server_items() {
         let store = store.clone();
         move |source, _| {
             let Some(player_entity) = source.client_entity_id() else { return; };
-            let Some(player_head) = entity::get_component(player_entity, player::head_ref()) else { return; };
-            let Some(left_hand) = entity::get_component(player_head, player::left_hand_ref()) else { return; };
-            let Some(right_hand) = entity::get_component(player_head, player::right_hand_ref()) else { return; };
+            let Some(left_hand) = entity::get_component(player_entity, player::left_hand_ref()) else { return; };
+            let Some(right_hand) = entity::get_component(player_entity, player::right_hand_ref()) else { return; };
 
             let left_held =
                 entity::get_component(left_hand, player::held_item_ref()).unwrap_or_default();

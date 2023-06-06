@@ -4,9 +4,21 @@ description = "Player-related components."
 
 [components."player::head_ref"]
 type = "EntityId"
-name = "PlayerHeadRef"
-description = "The player's head."
+name = "HeadRef"
 attributes = ["Debuggable"]
+description = """
+A reference to this player's head entity. Used client-side only in order to
+update the main camera's transform.
+"""
+
+[components."player::loaded"]
+type = "Empty"
+name = "Loaded"
+attributes = ["Debuggable", "Networked"]
+description = """
+A tag attached to a player entity when all of its server-side setup has been
+completed and client-side setup is ready to begin.
+"""
 
 [components."player::movement_direction"]
 type = "Vec2"

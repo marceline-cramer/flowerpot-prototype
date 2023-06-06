@@ -65,6 +65,7 @@ pub fn init_players() {
             player_entity,
             Entity::new()
                 .with_merge(make_transformable())
+                .with_default(local_player())
                 .with_default(cube())
                 .with(head_ref(), head),
         );

@@ -20,6 +20,15 @@ A tag attached to a player entity when all of its server-side setup has been
 completed and client-side setup is ready to begin.
 """
 
+[components."player::local_player"]
+type = "Empty"
+name = "LocalPlayer"
+attributes = ["Debuggable"]
+description = """
+A client-only tag attached to local player entities. Used to differentiate
+systems specific to other players from systems specific to the local player.
+"""
+
 [components."player::movement_direction"]
 type = "Vec2"
 atttributes = ["Debuggable"]

@@ -181,11 +181,11 @@ atttributes = ["Debuggable"]
 
 [components."player::yaw"]
 type = "F32"
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components."player::pitch"]
 type = "F32"
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components."player::left_hand_ref"]
 type = "EntityId"

@@ -165,33 +165,37 @@ name = "SearchSmallCropResult"
 description = "The result of a search for cover crops."
 attributes = ["Debuggable"]
 
-[components.player_head_ref]
+[components.player]
+name = "Player"
+description = "Player-related components."
+
+[components."player::head_ref"]
 type = "EntityId"
 name = "PlayerHeadRef"
 description = "The player's head."
 attributes = ["Debuggable"]
 
-[components.player_movement_direction]
+[components."player::movement_direction"]
 type = "Vec2"
 atttributes = ["Debuggable"]
 
-[components.player_yaw]
+[components."player::yaw"]
 type = "F32"
 attributes = ["Debuggable"]
 
-[components.player_pitch]
+[components."player::pitch"]
 type = "F32"
 attributes = ["Debuggable"]
 
-[components.player_left_hand_ref]
+[components."player::left_hand_ref"]
 type = "EntityId"
 attributes = ["Debuggable", "Networked"]
 
-[components.player_right_hand_ref]
+[components."player::right_hand_ref"]
 type = "EntityId"
 attributes = ["Debuggable", "Networked"]
 
-[components.player_hand_held_item_ref]
+[components."player::held_item_ref"]
 type = "EntityId"
 attributes = ["Debuggable", "Networked"]
 

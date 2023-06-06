@@ -6,7 +6,10 @@ use ambient_api::{
     prelude::*,
 };
 
-use crate::{components::*, messages};
+use crate::{
+    components::{map_position, player::*},
+    messages,
+};
 
 /// Sets up player-related systems.
 pub fn init_players() {
@@ -33,7 +36,7 @@ pub fn init_players() {
                     .with(rotation(), Quat::IDENTITY)
                     .with(scale(), Vec3::splat(0.1))
                     .with_default(cube())
-                    .with(player_hand_held_item_ref(), held)
+                    .with(held_item_ref(), held)
                     .spawn()
             };
 
@@ -41,8 +44,8 @@ pub fn init_players() {
             let right_hand = make_hand(Vec3::new(0.5, -0.4, 1.0), *crate::items::YELLOW_ITEM);
 
             entity::add_component(head, children(), vec![left_hand, right_hand]);
-            entity::add_component(head, player_left_hand_ref(), left_hand);
-            entity::add_component(head, player_right_hand_ref(), right_hand);
+            entity::add_component(head, left_hand_ref(), left_hand);
+            entity::add_component(head, right_hand_ref(), right_hand);
 
             entity::add_components(
                 e,
@@ -51,35 +54,35 @@ pub fn init_players() {
                     .with_default(cube())
                     .with(map_position(), Vec2::new(16.0, 16.0))
                     .with(children(), vec![head])
-                    .with(player_head_ref(), head)
-                    .with(player_pitch(), 0.0)
-                    .with(player_yaw(), 0.0),
+                    .with(head_ref(), head)
+                    .with(pitch(), 0.0)
+                    .with(yaw(), 0.0),
             );
         }
     });
 
     messages::PlayerMovementInput::subscribe(move |source, msg| {
-        let Some(player_id) = source.client_entity_id() else { return; };
+        let Some(id) = source.client_entity_id() else { return; };
 
         let direction = msg.direction.normalize_or_zero();
-        let yaw = msg.yaw % TAU;
-        let pitch = msg.pitch.clamp(-FRAC_PI_2, FRAC_PI_2);
+        let new_yaw = msg.yaw % TAU;
+        let new_pitch = msg.pitch.clamp(-FRAC_PI_2, FRAC_PI_2);
 
         entity::add_components(
-            player_id,
+            id,
             Entity::new()
-                .with(player_movement_direction(), direction)
-                .with(player_yaw(), yaw)
-                .with(player_pitch(), pitch),
+                .with(movement_direction(), direction)
+                .with(yaw(), new_yaw)
+                .with(pitch(), new_pitch),
         );
     });
 
-    change_query((player(), player_yaw(), player_pitch()))
-        .track_change((player_yaw(), player_pitch()))
+    change_query((player(), yaw(), pitch()))
+        .track_change((yaw(), pitch()))
         .bind(move |players| {
             for (e, (_player, yaw, pitch)) in players {
                 entity::set_component(e, rotation(), Quat::from_rotation_z(yaw));
-                if let Some(head) = entity::get_component(e, player_head_ref()) {
+                if let Some(head) = entity::get_component(e, head_ref()) {
                     entity::set_component(
                         head,
                         rotation(),
@@ -89,7 +92,7 @@ pub fn init_players() {
             }
         });
 
-    query((player(), player_movement_direction(), player_yaw())).each_frame(move |players| {
+    query((player(), movement_direction(), yaw())).each_frame(move |players| {
         for (e, (_, direction, yaw)) in players {
             let speed = 0.1;
             let direction = Mat2::from_angle(yaw) * direction;

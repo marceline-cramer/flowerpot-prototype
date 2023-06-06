@@ -5,10 +5,7 @@ use std::{
 
 use ambient_api::{components::core::primitives::cube, prelude::*};
 
-use crate::components::{
-    crafting::*, player_hand_held_item_ref, player_head_ref, player_left_hand_ref,
-    player_right_hand_ref,
-};
+use crate::components::{crafting::*, player};
 
 lazy_static::lazy_static! {
     pub static ref BLUE_ITEM: EntityId = Entity::new()
@@ -119,8 +116,8 @@ pub fn init_items() {
     });
 
     // TODO this should run client-side.
-    change_query(player_hand_held_item_ref())
-        .track_change(player_hand_held_item_ref())
+    change_query(player::held_item_ref())
+        .track_change(player::held_item_ref())
         .bind(move |changes| {
             for (hand, item) in changes {
                 if item.is_null() {
@@ -138,21 +135,21 @@ pub fn init_items() {
         let store = store.clone();
         move |source, _| {
             let Some(player_entity) = source.client_entity_id() else { return; };
-            let Some(player_head) = entity::get_component(player_entity, player_head_ref()) else { return; };
-            let Some(left_hand) = entity::get_component(player_head, player_left_hand_ref()) else { return; };
-            let Some(right_hand) = entity::get_component(player_head, player_right_hand_ref()) else { return; };
+            let Some(player_head) = entity::get_component(player_entity, player::head_ref()) else { return; };
+            let Some(left_hand) = entity::get_component(player_head, player::left_hand_ref()) else { return; };
+            let Some(right_hand) = entity::get_component(player_head, player::right_hand_ref()) else { return; };
 
             let left_held =
-                entity::get_component(left_hand, player_hand_held_item_ref()).unwrap_or_default();
+                entity::get_component(left_hand, player::held_item_ref()).unwrap_or_default();
 
             let right_held =
-                entity::get_component(right_hand, player_hand_held_item_ref()).unwrap_or_default();
+                entity::get_component(right_hand, player::held_item_ref()).unwrap_or_default();
 
             let store = store.lock().unwrap();
             if let Some((new_left_held, new_right_held)) = store.apply_craft(left_held, right_held)
             {
-                entity::add_component(left_hand, player_hand_held_item_ref(), new_left_held);
-                entity::add_component(right_hand, player_hand_held_item_ref(), new_right_held);
+                entity::add_component(left_hand, player::held_item_ref(), new_left_held);
+                entity::add_component(right_hand, player::held_item_ref(), new_right_held);
             }
         }
     });

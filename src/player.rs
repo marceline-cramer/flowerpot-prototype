@@ -1,8 +1,11 @@
 use std::f32::consts::{FRAC_PI_2, TAU};
 
 use ambient_api::{
-    components::core::{camera::aspect_ratio_from_window, primitives::cube},
-    concepts::{make_perspective_infinite_reverse_camera, make_transformable},
+    components::core::{
+        camera::aspect_ratio_from_window,
+        primitives::{cube, sphere_radius},
+    },
+    concepts::{make_perspective_infinite_reverse_camera, make_sphere, make_transformable},
     prelude::*,
 };
 
@@ -35,8 +38,9 @@ pub fn init_players() {
                     .with(translation(), offset)
                     .with(rotation(), Quat::IDENTITY)
                     .with(scale(), Vec3::splat(0.1))
-                    .with_default(cube())
                     .with(held_item_ref(), held)
+                    .with_merge(make_sphere())
+                    .with(sphere_radius(), 0.01)
                     .spawn()
             };
 

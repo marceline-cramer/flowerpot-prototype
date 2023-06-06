@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use ambient_api::{components::core::primitives::cube, prelude::*};
+use ambient_api::{components::core::primitives::cube, concepts::make_transformable, prelude::*};
 
 use crate::components::{crafting::*, player};
 
@@ -116,18 +116,29 @@ pub fn init_items() {
     });
 
     // TODO this should run client-side.
-    change_query(player::held_item_ref())
+    change_query((player::held_item_ref(), user_id()))
         .track_change(player::held_item_ref())
         .bind(move |changes| {
-            for (hand, item) in changes {
-                if item.is_null() {
-                    entity::remove_component(hand, cube());
-                } else {
-                    let item_color = entity::get_component(item, color());
-                    let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
-                    entity::add_component(hand, cube(), ());
-                    entity::add_component(hand, color(), new_color);
+            for (hand, (item, uid)) in changes {
+                for child in entity::get_component(hand, children()).unwrap_or_default() {
+                    entity::despawn_recursive(child);
                 }
+
+                if item.is_null() {
+                    continue;
+                }
+
+                let item_color = entity::get_component(item, color());
+                let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
+
+                let item_instance = Entity::new()
+                    .with_default(local_to_parent())
+                    .with_default(cube())
+                    .with(color(), new_color)
+                    .with(user_id(), uid)
+                    .spawn();
+
+                entity::add_child(hand, item_instance);
             }
         });
 

@@ -1,4 +1,4 @@
-use std::f32::consts::{FRAC_PI_2, TAU};
+use std::f32::consts::FRAC_PI_2;
 
 use ambient_api::{
     components::core::{
@@ -9,54 +9,9 @@ use ambient_api::{
     prelude::*,
 };
 
-use crate::{
-    components::{map_position, player::*},
-    messages,
-};
+use crate::components::player::*;
 
-/// Sets up server-side player-related systems.
-#[cfg(feature = "server")]
-pub fn init_server_players() {
-    spawn_query(player()).bind(move |players| {
-        for (e, _) in players {
-            entity::add_components(
-                e,
-                Entity::new()
-                    .with(map_position(), vec2(16.0, 16.0))
-                    .with(yaw(), 0.0)
-                    .with(pitch(), 0.0),
-            );
-        }
-    });
-
-    messages::PlayerMovementInput::subscribe(move |source, msg| {
-        let Some(id) = source.client_entity_id() else { return; };
-
-        let direction = msg.direction.normalize_or_zero();
-        let new_yaw = msg.yaw % TAU;
-        let new_pitch = msg.pitch.clamp(-FRAC_PI_2, FRAC_PI_2);
-
-        entity::add_components(
-            id,
-            Entity::new()
-                .with(movement_direction(), direction)
-                .with(yaw(), new_yaw)
-                .with(pitch(), new_pitch),
-        );
-    });
-
-    query((player(), movement_direction(), yaw())).each_frame(move |players| {
-        for (e, (_, direction, yaw)) in players {
-            let speed = 0.1;
-            let direction = Mat2::from_angle(yaw) * direction;
-            entity::mutate_component(e, map_position(), |pos| *pos += direction * speed);
-        }
-    });
-}
-
-/// Sets up client-side player-related systems.
-#[cfg(feature = "client")]
-pub fn init_client_players() {
+pub fn init_players() {
     on_player_spawn(|player_entity, user, is_local_player| {
         if !is_local_player {
             // TODO player models for other players
@@ -82,7 +37,7 @@ pub fn init_client_players() {
             .with(rotation(), Quat::from_rotation_x(FRAC_PI_2))
             .spawn();
 
-        let make_hand = |offset, held| {
+        let make_hand = |offset| {
             Entity::new()
                 .with_default(main_scene())
                 .with(user_id(), user.clone())
@@ -91,14 +46,14 @@ pub fn init_client_players() {
                 .with(translation(), offset)
                 .with(rotation(), Quat::IDENTITY)
                 .with(scale(), Vec3::splat(0.1))
-                .with(held_item_ref(), held)
+                .with(held_item_ref(), EntityId::null())
                 .with_merge(make_sphere())
                 .with(sphere_radius(), 0.01)
                 .spawn()
         };
 
-        let left_hand = make_hand(Vec3::new(-0.5, -0.4, 1.0), *crate::items::BLUE_ITEM);
-        let right_hand = make_hand(Vec3::new(0.5, -0.4, 1.0), *crate::items::YELLOW_ITEM);
+        let left_hand = make_hand(Vec3::new(-0.5, -0.4, 1.0));
+        let right_hand = make_hand(Vec3::new(0.5, -0.4, 1.0));
 
         entity::add_component(head, children(), vec![left_hand, right_hand]);
         entity::add_component(head, left_hand_ref(), left_hand);
@@ -130,11 +85,10 @@ pub fn init_client_players() {
         });
 }
 
-/// Client-side function to run a closure when player entities spawns.
+/// Helper function to run a closure when player entities spawns.
 ///
 /// The closure takes the entity ID of the new player, the user ID, and
 /// whether the player is the local player.
-#[cfg(feature = "client")]
 pub fn on_player_spawn(cb: impl Fn(EntityId, String, bool) + 'static) {
     spawn_query((player(), user_id())).bind(move |players| {
         let local_uid = entity::get_component(entity::resources(), local_user_id()).unwrap();
@@ -145,7 +99,6 @@ pub fn on_player_spawn(cb: impl Fn(EntityId, String, bool) + 'static) {
     });
 }
 
-#[cfg(feature = "client")]
 lazy_static::lazy_static! {
     pub static ref LOCAL_PLAYER_ENTITY: EntityId = {
         let (e_tx, e_rx) = std::sync::mpsc::sync_channel(0);

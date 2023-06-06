@@ -13,12 +13,12 @@ slab = "0.4"
 
 [[bin]]
 name = "client_flowerpot_prototype"
-path = "src/client.rs"
+path = "src/client/mod.rs"
 required-features = ["client"]
 
 [[bin]]
 name = "server_flowerpot_prototype"
-path = "src/server.rs"
+path = "src/server/mod.rs"
 required-features = ["server"]
 
 [features]

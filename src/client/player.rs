@@ -1,8 +1,10 @@
 use std::f32::consts::FRAC_PI_2;
 
 use ambient_api::{
-    components::core::{camera::aspect_ratio_from_window, primitives::cube},
-    concepts::{make_perspective_infinite_reverse_camera, make_sphere, make_transformable},
+    components::core::{
+        camera::aspect_ratio_from_window, prefab::prefab_from_url, primitives::cube,
+    },
+    concepts::{make_perspective_infinite_reverse_camera, make_transformable},
     prelude::*,
 };
 
@@ -16,7 +18,10 @@ pub fn init_players() {
                 player_entity,
                 Entity::new()
                     .with_merge(make_transformable())
-                    .with_merge(make_sphere())
+                    .with(
+                        prefab_from_url(),
+                        asset::url("assets/player/player.glb").unwrap(),
+                    )
                     .with(color(), vec4(1.0, 0.0, 0.0, 1.0)),
             );
 

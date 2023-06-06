@@ -3,6 +3,11 @@ id = "flowerpot_prototype"
 name = "Flowerpot Prototype"
 version = "0.0.1"
 
+includes = [
+  "schema/crafting.toml",
+  "schema/player.toml",
+]
+
 [components.tile]
 type = "Empty"
 name = "Tile"
@@ -163,64 +168,6 @@ attributes = ["Debuggable"]
 type = "EntityId"
 name = "SearchSmallCropResult"
 description = "The result of a search for cover crops."
-attributes = ["Debuggable"]
-
-[components.player]
-name = "Player"
-description = "Player-related components."
-
-[components."player::head_ref"]
-type = "EntityId"
-name = "PlayerHeadRef"
-description = "The player's head."
-attributes = ["Debuggable"]
-
-[components."player::movement_direction"]
-type = "Vec2"
-atttributes = ["Debuggable"]
-
-[components."player::yaw"]
-type = "F32"
-attributes = ["Debuggable", "Networked"]
-
-[components."player::pitch"]
-type = "F32"
-attributes = ["Debuggable", "Networked"]
-
-[components."player::left_hand_ref"]
-type = "EntityId"
-attributes = ["Debuggable", "Networked"]
-
-[components."player::right_hand_ref"]
-type = "EntityId"
-attributes = ["Debuggable", "Networked"]
-
-[components."player::held_item_ref"]
-type = "EntityId"
-attributes = ["Debuggable", "Networked"]
-
-[components.crafting]
-name = "Crafting"
-description = "All components related to crafting."
-
-[components."crafting::recipe"]
-type = "Empty"
-attributes = ["Debuggable"]
-
-[components."crafting::primary_ingredient"]
-type = "EntityId"
-attributes = ["Debuggable"]
-
-[components."crafting::secondary_ingredient"]
-type = "EntityId"
-attributes = ["Debuggable"]
-
-[components."crafting::primary_yield"]
-type = "EntityId"
-attributes = ["Debuggable"]
-
-[components."crafting::secondary_yield"]
-type = "EntityId"
 attributes = ["Debuggable"]
 
 [messages.grow_tick]

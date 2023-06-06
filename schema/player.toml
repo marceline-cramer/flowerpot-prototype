@@ -1,0 +1,33 @@
+[components.player]
+name = "Player"
+description = "Player-related components."
+
+[components."player::head_ref"]
+type = "EntityId"
+name = "PlayerHeadRef"
+description = "The player's head."
+attributes = ["Debuggable"]
+
+[components."player::movement_direction"]
+type = "Vec2"
+atttributes = ["Debuggable"]
+
+[components."player::yaw"]
+type = "F32"
+attributes = ["Debuggable", "Networked"]
+
+[components."player::pitch"]
+type = "F32"
+attributes = ["Debuggable", "Networked"]
+
+[components."player::left_hand_ref"]
+type = "EntityId"
+attributes = ["Debuggable", "Networked"]
+
+[components."player::right_hand_ref"]
+type = "EntityId"
+attributes = ["Debuggable", "Networked"]
+
+[components."player::held_item_ref"]
+type = "EntityId"
+attributes = ["Debuggable", "Networked"]

@@ -1,0 +1,23 @@
+[components.crafting]
+name = "Crafting"
+description = "All components related to crafting."
+
+[components."crafting::recipe"]
+type = "Empty"
+attributes = ["Debuggable"]
+
+[components."crafting::primary_ingredient"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
+[components."crafting::secondary_ingredient"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
+[components."crafting::primary_yield"]
+type = "EntityId"
+attributes = ["Debuggable"]
+
+[components."crafting::secondary_yield"]
+type = "EntityId"
+attributes = ["Debuggable"]

@@ -46,5 +46,5 @@ pub fn main() {
     fauna::init_fauna();
     items::init_server_items();
     map::init_map();
-    player::init_players();
+    player::init_server_players();
 }

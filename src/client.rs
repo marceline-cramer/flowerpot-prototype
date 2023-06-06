@@ -3,10 +3,12 @@ use std::f32::consts::{FRAC_PI_2, TAU};
 use ambient_api::prelude::*;
 
 mod items;
+mod player;
 
 #[main]
 pub fn main() {
     items::init_client_items();
+    player::init_client_players();
 
     let mut cursor_lock = input::CursorLockGuard::new(true);
     let mut pitch = 0.0;

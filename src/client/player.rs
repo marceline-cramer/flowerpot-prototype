@@ -44,10 +44,10 @@ pub fn init_players() {
                 Entity::new()
                     .with_default(main_scene())
                     .with_default(local_to_parent())
+                    .with_default(local_to_world())
                     .with(translation(), offset)
                     .with(rotation(), Quat::IDENTITY)
-                    .with(scale(), Vec3::splat(0.1))
-                .with_merge(make_sphere()),
+                    .with(scale(), Vec3::splat(0.1)),
             );
 
             entity::add_child(head, e);

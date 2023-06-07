@@ -10,15 +10,15 @@ use crate::{
 pub fn init_players() {
     spawn_query((player(), user_id())).bind(move |players| {
         for (player_entity, (_, user)) in players {
-            let make_hand = |held| {
+            let make_hand = || {
                 Entity::new()
                     .with(user_id(), user.clone())
-                    .with(held_item_ref(), held)
+                    .with(held_item_ref(), EntityId::null())
                     .spawn()
             };
 
-            let left_hand = make_hand(*crate::items::BLUE_ITEM);
-            let right_hand = make_hand(*crate::items::YELLOW_ITEM);
+            let left_hand = make_hand();
+            let right_hand = make_hand();
 
             entity::add_components(
                 player_entity,

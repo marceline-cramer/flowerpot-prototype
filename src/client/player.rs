@@ -5,6 +5,7 @@ use ambient_api::{
         camera::aspect_ratio_from_window, prefab::prefab_from_url, primitives::cube,
     },
     concepts::{make_perspective_infinite_reverse_camera, make_transformable},
+    input::get_previous,
     messages::Frame,
     prelude::*,
 };
@@ -113,7 +114,6 @@ pub async fn init_players() -> EntityId {
         let mut cursor_lock = input::CursorLockGuard::new(true);
         let mut pitch = 0.0;
         let mut yaw = 0.0;
-        let mut craft_last = false;
         move |_| {
             let input = input::get();
             if !cursor_lock.auto_unlock_on_escape(&input) {
@@ -147,12 +147,12 @@ pub async fn init_players() -> EntityId {
             entity::add_component(local_player_entity, local_yaw(), yaw);
             entity::add_component(local_player_entity, local_pitch(), pitch);
 
-            let craft_pressed = input.keys.contains(&KeyCode::Q);
-            if !craft_last && craft_pressed {
+            let last_input = get_previous();
+            let input_delta = input.delta(&last_input);
+
+            if input_delta.keys.contains(&KeyCode::Q) {
                 PlayerCraftInput::new().send_server_reliable();
             }
-
-            craft_last = craft_pressed;
         }
     });
 

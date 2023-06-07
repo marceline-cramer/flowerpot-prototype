@@ -1,13 +1,15 @@
 use ambient_api::{concepts::make_transformable, prelude::*};
 
-use components::*;
+use components::{map::position, *};
 
 mod crop;
 mod fauna;
 mod items;
 mod map;
-mod partitioning;
 mod player;
+
+#[path = "../shared/mod.rs"]
+mod shared;
 
 #[main]
 pub fn main() {
@@ -32,12 +34,12 @@ pub fn main() {
             let new_step = step + frametime();
             if new_step > duration {
                 entity::remove_component(e, movement_step());
-                entity::add_component(e, map_position(), target);
+                entity::add_component(e, position(), target);
             } else {
                 let delta = new_step / duration;
                 let new_pos = start * (1.0 - delta) + target * delta;
                 entity::set_component(e, movement_step(), new_step);
-                entity::add_component(e, map_position(), new_pos);
+                entity::add_component(e, position(), new_pos);
             }
         }
     });

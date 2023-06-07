@@ -6,7 +6,7 @@ use ambient_api::prelude::*;
 use parry2d::{bounding_volume::Aabb, math::Point, partitioning::*};
 use slab::Slab;
 
-use crate::components::map_position;
+use crate::components::map;
 
 struct PartitioningData {
     qbvh: Qbvh<usize>,
@@ -42,8 +42,8 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
 
     let data = Arc::new(RwLock::new(data));
 
-    change_query((map_position(), searchable_component))
-        .track_change((map_position(), searchable_component))
+    change_query((map::position(), searchable_component))
+        .track_change((map::position(), searchable_component))
         .bind({
             let data = data.clone();
             move |entities| {
@@ -68,7 +68,7 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
             }
         });
 
-    despawn_query((map_position(), searchable_component)).bind({
+    despawn_query((map::position(), searchable_component)).bind({
         let data = data.clone();
         move |entities| {
             let mut data = data.write().unwrap();
@@ -83,7 +83,7 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
         }
     });
 
-    query((map_position(), search_radius_component))
+    query((map::position(), search_radius_component))
         .excludes(result_component)
         .each_frame({
             let data = data.clone();
@@ -107,7 +107,7 @@ pub fn init_qbvh<SearchableData: SupportedValue + 'static>(
                         };
 
                         // TODO cache this in leaves_to_entities?
-                        let result_pos = match entity::get_component(result, map_position()) {
+                        let result_pos = match entity::get_component(result, map::position()) {
                             None => continue,
                             Some(pos) => pos,
                         };

@@ -183,6 +183,9 @@ fn make_vegetation(vegetation_type: &str) {
     }
 }
 
+#[path = "../shared/mod.rs"]
+mod shared;
+
 #[ambient_api::main]
 pub async fn main() {
     items::init_items();

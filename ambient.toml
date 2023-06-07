@@ -5,38 +5,10 @@ version = "0.0.1"
 
 includes = [
   "schema/crafting.toml",
+  "schema/items.toml",
+  "schema/map.toml",
   "schema/player.toml",
 ]
-
-[components.tile]
-type = "Empty"
-name = "Tile"
-description = "A tag belonging to all tile entities."
-attributes = ["Debuggable"]
-
-[components.west_neighbor]
-type = "EntityId"
-name = "WestNeighhbor"
-description = "The entity ID west of this entity."
-attributes = ["Debuggable"]
-
-[components.north_neighbor]
-type = "EntityId"
-name = "NorthNeighhbor"
-description = "The entity ID north of this entity."
-attributes = ["Debuggable"]
-
-[components.east_neighbor]
-type = "EntityId"
-name = "EastNeighhbor"
-description = "The entity ID east of this entity."
-attributes = ["Debuggable"]
-
-[components.south_neighbor]
-type = "EntityId"
-name = "SouthNeighhbor"
-description = "The entity ID south of this entity."
-attributes = ["Debuggable"]
 
 [components.soil]
 type = "Empty"
@@ -61,24 +33,6 @@ type = "F32"
 name = "Sustenance"
 description = "The amount of fullness restored by devouring this entity."
 attributes = ["Debuggable"]
-
-[components.map_position]
-type = "Vec2"
-name = "MapPosition"
-description = "The position of this entity in map coordinates."
-attributes = ["Debuggable", "Networked"]
-
-[components.map_elevation]
-type = "F32"
-name = "MapElevation"
-description = "The elevation of this entity above the map in meters."
-attributes = ["Debuggable", "Networked"]
-
-[components.on_tile]
-type = "EntityId"
-name = "OnTile"
-description = "The entity ID of the tile that this entity is on top of."
-attributes = ["Debuggable", "Networked"]
 
 [components.fauna]
 type = "Empty"
@@ -172,27 +126,6 @@ attributes = ["Debuggable"]
 
 [messages.grow_tick]
 description = "Grows flora."
-fields = {}
-
-[messages.player_movement_input]
-name = "PlayerMovementInput"
-description = "Client-to-server message to set the movement state of a player."
-
-[messages.player_movement_input.fields.yaw]
-type = "F32"
-description = "The new yaw (in radians) of the player."
-
-[messages.player_movement_input.fields.pitch]
-type = "F32"
-description = "The new pitch (in radians) of the player."
-
-[messages.player_movement_input.fields.direction]
-type = "Vec2"
-description = "The movement direction of the player relative to the yaw. This is normalized to unit length."
-
-[messages.player_craft_input]
-name = "PlayerCraftInput"
-description = "Message sent when a player attempts to craft the two held items."
 fields = {}
 
 [components]

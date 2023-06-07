@@ -5,14 +5,14 @@ use crate::{components::*, messages};
 /// Sets up crop-related systems.
 pub fn init_crops() {
     // init cover crop searching
-    crate::partitioning::init_qbvh(
+    crate::shared::partitioning::init_qbvh(
         cover_crop_occupant(),
         search_cover_crop_radius(),
         search_cover_crop_result(),
     );
 
     messages::GrowTick::subscribe({
-        let growable_query = query((tile(), cover_crop_occupant())).build();
+        let growable_query = query((map::tile(), cover_crop_occupant())).build();
         let mut rng = rand::thread_rng();
         move |_, _| {
             for (tile, (_, cover_crop)) in growable_query.evaluate() {

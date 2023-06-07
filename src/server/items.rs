@@ -5,18 +5,22 @@ use std::{
 
 use ambient_api::prelude::*;
 
-use crate::components::{crafting::*, player};
+use crate::components::{crafting::*, items::class_ref, map};
+use crate::player::PlayerEntities;
 
 lazy_static::lazy_static! {
     pub static ref BLUE_ITEM: EntityId = Entity::new()
+        .with(name(), "Blue Item".into())
         .with(color(), vec4(0.0, 0.0, 1.0, 1.0))
         .spawn();
 
     pub static ref GREEN_ITEM: EntityId = Entity::new()
+        .with(name(), "Green Item".into())
         .with(color(), vec4(0.0, 1.0, 0.0, 1.0))
         .spawn();
 
     pub static ref YELLOW_ITEM: EntityId = Entity::new()
+        .with(name(), "Yellow Item".into())
         .with(color(), vec4(1.0, 1.0, 0.0, 1.0))
         .spawn();
 }
@@ -117,23 +121,47 @@ pub fn init_server_items() {
     crate::messages::PlayerCraftInput::subscribe({
         let store = store.clone();
         move |source, _| {
-            let Some(player_entity) = source.client_entity_id() else { return; };
-            let Some(left_hand) = entity::get_component(player_entity, player::left_hand_ref()) else { return; };
-            let Some(right_hand) = entity::get_component(player_entity, player::right_hand_ref()) else { return; };
-
-            let left_held =
-                entity::get_component(left_hand, player::held_item_ref()).unwrap_or_default();
-
-            let right_held =
-                entity::get_component(right_hand, player::held_item_ref()).unwrap_or_default();
-
+            let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
             let store = store.lock().unwrap();
-            if let Some((new_left_held, new_right_held)) = store.apply_craft(left_held, right_held)
-            {
-                entity::add_component(left_hand, player::held_item_ref(), new_left_held);
-                entity::add_component(right_hand, player::held_item_ref(), new_right_held);
+            let crafted = store.apply_craft(player.left_held, player.right_held);
+            if let Some((new_left_held, new_right_held)) = crafted {
+                player.set_left_held(new_left_held);
+                player.set_right_held(new_right_held);
             }
         }
+    });
+
+    crate::messages::PlayerSwapItemsInput::subscribe(move |source, _| {
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
+        let left_held = player.left_held;
+        let right_held = player.right_held;
+        player.set_left_held(right_held);
+        player.set_right_held(left_held);
+    });
+
+    crate::messages::PlayerPickUpItemInput::subscribe(move |source, data| {
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
+
+        match entity::get_component(data.target, map::position()) {
+            Some(_) => {}   // TODO range checking for pickups
+            None => return, // invalid item grab
+        }
+
+        let Some(class) = entity::get_component(data.target, class_ref()) else {
+            eprintln!("Item {:?} has no class", data.target);
+            return;
+        };
+
+        if player.right_held.is_null() {
+            player.set_right_held(class);
+        } else if player.left_held.is_null() {
+            player.set_left_held(class);
+        } else {
+            return;
+        }
+
+        // item is no longer on the map
+        entity::remove_component(data.target, map::position());
     });
 
     // temp crafting recipe

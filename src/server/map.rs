@@ -38,10 +38,10 @@ impl OrdinalDirection {
     pub fn as_neighbor_component(&self) -> Component<EntityId> {
         use OrdinalDirection::*;
         match self {
-            West => west_neighbor(),
-            North => north_neighbor(),
-            East => east_neighbor(),
-            South => south_neighbor(),
+            West => map::west_neighbor_ref(),
+            North => map::north_neighbor_ref(),
+            East => map::east_neighbor_ref(),
+            South => map::south_neighbor_ref(),
         }
     }
 
@@ -96,10 +96,10 @@ pub fn init_map() {
                 .with_merge(make_transformable())
                 .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
                 .with_default(quad())
-                .with_default(tile())
+                .with_default(map::tile())
                 .with_default(soil())
                 .with(cover_crop_occupant(), grass)
-                .with(map_position(), xy.as_vec2())
+                .with(map::position(), xy.as_vec2())
                 .spawn();
 
             map.insert(xy, tile);
@@ -114,19 +114,19 @@ pub fn init_map() {
         let e = *e;
 
         if let Some(neighbor) = map.get(&(xy - IVec2::X)) {
-            entity::add_component(e, west_neighbor(), *neighbor);
+            entity::add_component(e, map::west_neighbor_ref(), *neighbor);
         }
 
         if let Some(neighbor) = map.get(&(xy - IVec2::Y)) {
-            entity::add_component(e, north_neighbor(), *neighbor);
+            entity::add_component(e, map::north_neighbor_ref(), *neighbor);
         }
 
         if let Some(neighbor) = map.get(&(xy + IVec2::X)) {
-            entity::add_component(e, east_neighbor(), *neighbor);
+            entity::add_component(e, map::east_neighbor_ref(), *neighbor);
         }
 
         if let Some(neighbor) = map.get(&(xy + IVec2::Y)) {
-            entity::add_component(e, south_neighbor(), *neighbor);
+            entity::add_component(e, map::south_neighbor_ref(), *neighbor);
         }
     }
 
@@ -138,12 +138,12 @@ pub fn init_map() {
                 let delta = step / duration;
                 let height_factor = delta * (1.0 - delta) * 4.0;
                 let elevation = height * height_factor;
-                entity::add_component(e, map_elevation(), elevation);
+                entity::add_component(e, map::elevation(), elevation);
             }
         });
 
     // set soil tiles material
-    spawn_query((tile(), soil()))
+    spawn_query((map::tile(), soil()))
         .excludes(cover_crop_occupant())
         .bind(move |tiles| {
             for (e, (_, _)) in tiles {
@@ -156,7 +156,7 @@ pub fn init_map() {
         });
 
     // update materials of tiles with cover crops
-    change_query((tile(), cover_crop_occupant()))
+    change_query((map::tile(), cover_crop_occupant()))
         .track_change(cover_crop_occupant())
         .bind(move |tiles| {
             for (e, (_, cover_crop)) in tiles {
@@ -167,20 +167,35 @@ pub fn init_map() {
         });
 
     // update entities' translation and OnTile with map coordinates
-    change_query(map_position())
-        .track_change(map_position())
+    change_query(map::position())
+        .track_change(map::position())
         .bind({
             let map = map.clone();
             move |changes| {
                 for (e, xy) in changes {
                     let xy = (xy + 0.5).floor().as_ivec2();
                     match map.get(&xy) {
-                        None => entity::remove_component(e, on_tile()),
-                        Some(tile) => entity::add_component(e, on_tile(), *tile),
+                        None => entity::remove_component(e, map::on_tile()),
+                        Some(tile) => entity::add_component(e, map::on_tile(), *tile),
                     }
                 }
             }
         });
+
+    // spawn some items on the ground
+    {
+        use crate::items::*;
+
+        Entity::new()
+            .with(map::position(), vec2(10.0, 15.0))
+            .with(items::class_ref(), *BLUE_ITEM)
+            .spawn();
+
+        Entity::new()
+            .with(map::position(), vec2(17.0, 13.0))
+            .with(items::class_ref(), *YELLOW_ITEM)
+            .spawn();
+    }
 
     // TODO make bunnies fun to code and important to gameplay
     return;
@@ -207,8 +222,8 @@ pub fn init_map() {
             .with(movement_distance(), 0.5)
             .with(search_cover_crop_radius(), 10.0)
             .with(
-                map_position(),
-                entity::get_component(*tile, map_position()).unwrap(),
+                map::position(),
+                entity::get_component(*tile, map::position()).unwrap(),
             )
             .with(fullness(), 1.0)
             .with(hunger_rate(), 0.1)

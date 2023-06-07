@@ -1,0 +1,51 @@
+[components.map]
+name = "Map"
+description = "Components about the map and about entities located within it."
+
+[components."map::position"]
+type = "Vec2"
+name = "MapPosition"
+description = "The position of this entity in map coordinates."
+attributes = ["Debuggable", "Networked"]
+
+[components."map::elevation"]
+type = "F32"
+name = "MapElevation"
+description = "The elevation of this entity above the map in meters."
+attributes = ["Debuggable", "Networked"]
+
+[components."map::on_tile"]
+type = "EntityId"
+name = "OnTile"
+description = "The entity ID of the tile that this entity is on top of."
+attributes = ["Debuggable", "Networked"]
+
+[components."map::tile"]
+type = "Empty"
+name = "Tile"
+description = "A tag belonging to all tile entities."
+attributes = ["Debuggable"]
+
+[components."map::west_neighbor_ref"]
+type = "EntityId"
+name = "WestNeighhborRef"
+description = "The entity ID of the tile west of this tile."
+attributes = ["Debuggable"]
+
+[components."map::north_neighbor_ref"]
+type = "EntityId"
+name = "NorthNeighhborRef"
+description = "The entity ID of the tile north of this tile."
+attributes = ["Debuggable"]
+
+[components."map::east_neighbor_ref"]
+type = "EntityId"
+name = "EastNeighhborRef"
+description = "The entity ID of the tile east of this tile."
+attributes = ["Debuggable"]
+
+[components."map::south_neighbor_ref"]
+type = "EntityId"
+name = "SouthNeighhborRef"
+description = "The entity ID of the tile south of this tile."
+attributes = ["Debuggable"]

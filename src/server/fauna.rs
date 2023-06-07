@@ -40,8 +40,8 @@ pub fn init_fauna() {
     // move fauna
     query((
         fauna(),
-        map_position(),
-        on_tile(),
+        map::position(),
+        map::on_tile(),
         stamina(),
         fullness(),
         movement_cost(),
@@ -86,7 +86,7 @@ pub fn init_fauna() {
                 continue;
             }
 
-            let target_pos = match entity::get_component(search_result, map_position()) {
+            let target_pos = match entity::get_component(search_result, map::position()) {
                 Some(target_pos) => target_pos,
                 None => continue,
             };

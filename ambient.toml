@@ -5,38 +5,9 @@ version = "0.0.1"
 
 includes = [
   "schema/crafting.toml",
+  "schema/map.toml",
   "schema/player.toml",
 ]
-
-[components.tile]
-type = "Empty"
-name = "Tile"
-description = "A tag belonging to all tile entities."
-attributes = ["Debuggable"]
-
-[components.west_neighbor]
-type = "EntityId"
-name = "WestNeighhbor"
-description = "The entity ID west of this entity."
-attributes = ["Debuggable"]
-
-[components.north_neighbor]
-type = "EntityId"
-name = "NorthNeighhbor"
-description = "The entity ID north of this entity."
-attributes = ["Debuggable"]
-
-[components.east_neighbor]
-type = "EntityId"
-name = "EastNeighhbor"
-description = "The entity ID east of this entity."
-attributes = ["Debuggable"]
-
-[components.south_neighbor]
-type = "EntityId"
-name = "SouthNeighhbor"
-description = "The entity ID south of this entity."
-attributes = ["Debuggable"]
 
 [components.soil]
 type = "Empty"
@@ -61,24 +32,6 @@ type = "F32"
 name = "Sustenance"
 description = "The amount of fullness restored by devouring this entity."
 attributes = ["Debuggable"]
-
-[components.map_position]
-type = "Vec2"
-name = "MapPosition"
-description = "The position of this entity in map coordinates."
-attributes = ["Debuggable", "Networked"]
-
-[components.map_elevation]
-type = "F32"
-name = "MapElevation"
-description = "The elevation of this entity above the map in meters."
-attributes = ["Debuggable", "Networked"]
-
-[components.on_tile]
-type = "EntityId"
-name = "OnTile"
-description = "The entity ID of the tile that this entity is on top of."
-attributes = ["Debuggable", "Networked"]
 
 [components.fauna]
 type = "Empty"

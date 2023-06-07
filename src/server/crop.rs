@@ -12,7 +12,7 @@ pub fn init_crops() {
     );
 
     messages::GrowTick::subscribe({
-        let growable_query = query((tile(), cover_crop_occupant())).build();
+        let growable_query = query((map::tile(), cover_crop_occupant())).build();
         let mut rng = rand::thread_rng();
         move |_, _| {
             for (tile, (_, cover_crop)) in growable_query.evaluate() {

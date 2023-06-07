@@ -3,7 +3,7 @@ use std::f32::consts::{FRAC_PI_2, TAU};
 use ambient_api::prelude::*;
 
 use crate::{
-    components::{map_position, player::*},
+    components::{map, player::*},
     messages,
 };
 
@@ -26,7 +26,7 @@ pub fn init_players() {
                     .with_default(loaded())
                     .with(left_hand_ref(), left_hand)
                     .with(right_hand_ref(), right_hand)
-                    .with(map_position(), vec2(16.0, 16.0))
+                    .with(map::position(), vec2(16.0, 16.0))
                     .with(yaw(), 0.0)
                     .with(pitch(), 0.0),
             );
@@ -60,7 +60,7 @@ pub fn init_players() {
         for (e, (_, _, direction, yaw)) in players {
             let speed = 0.1;
             let direction = Mat2::from_angle(yaw) * direction;
-            entity::mutate_component(e, map_position(), |pos| *pos += direction * speed);
+            entity::mutate_component(e, map::position(), |pos| *pos += direction * speed);
         }
     });
 }

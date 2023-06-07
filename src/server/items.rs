@@ -160,8 +160,35 @@ pub fn init_server_items() {
             return;
         }
 
-        // item is no longer on the map
+        // TODO proper item instance management
         entity::remove_component(data.target, map::position());
+    });
+
+    crate::messages::PlayerDropItemInput::subscribe(move |source, data| {
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
+
+        let Some(position) = entity::get_component(player.entity, map::position()) else {
+            eprintln!("Player {:?} has no position", player.entity);
+            return;
+        };
+
+        let class;
+        if data.hand {
+            class = player.right_held;
+            player.set_right_held(EntityId::null());
+        } else {
+            class = player.left_held;
+            player.set_left_held(EntityId::null());
+        }
+
+        if class.is_null() {
+            return;
+        }
+
+        Entity::new()
+            .with(map::position(), position)
+            .with(class_ref(), class)
+            .spawn();
     });
 
     // temp crafting recipe

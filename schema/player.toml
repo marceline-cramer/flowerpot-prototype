@@ -104,3 +104,11 @@ description = "Message sent when a player picks up an item."
 [messages.player_pick_up_item_input.fields.target]
 type = "EntityId"
 description = "The item to pick up."
+
+[messages.player_drop_item_input]
+name = "PlayerDropItemInput"
+description = "Message sent when a player drops an item."
+
+[messages.player_drop_item_input.fields.hand]
+type = "Bool"
+description = "False to drop the left hand's item, true to drop the right hand's item."

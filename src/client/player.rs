@@ -171,6 +171,14 @@ pub async fn init_players() -> EntityId {
                 local_player_entity,
                 crate::components::items::search_result(),
             );
+
+            if input_delta.keys.contains(&KeyCode::Z) {
+                PlayerDropItemInput::new(false).send_server_reliable();
+            }
+
+            if input_delta.keys.contains(&KeyCode::C) {
+                PlayerDropItemInput::new(true).send_server_reliable();
+            }
         }
     });
 

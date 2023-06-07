@@ -23,6 +23,14 @@ pub fn init_items() {
             spawn_item_model(e, class);
         }
     });
+
+    despawn_query((map::position(), items::class_ref())).bind(move |items| {
+        for (e, _) in items {
+            // TODO this is hacky because item instances are placed on the map
+            // at the time of writing player's hands reference classes directly.
+            entity::despawn_recursive(e);
+        }
+    });
 }
 
 /// Helper function to spawn models of items.

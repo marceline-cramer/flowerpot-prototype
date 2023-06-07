@@ -10,10 +10,7 @@ use ambient_api::{
     prelude::*,
 };
 
-use crate::{
-    components::player::*,
-    messages::{PlayerCraftInput, PlayerMovementInput, PlayerSwapItemsInput},
-};
+use crate::{components::player::*, messages::*};
 
 /// Initializes player-related systems. Returns the local player entity ID.
 pub async fn init_players() -> EntityId {
@@ -58,6 +55,7 @@ pub async fn init_players() -> EntityId {
                     .with_merge(make_transformable())
                     .with_default(local_player())
                     .with_default(cube())
+                    .with(crate::components::items::search_radius(), 1.0)
                     .with(head_ref(), head),
             );
 
@@ -157,6 +155,22 @@ pub async fn init_players() -> EntityId {
             if input_delta.keys.contains(&KeyCode::F) {
                 PlayerSwapItemsInput::new().send_server_reliable();
             }
+
+            if input_delta.keys.contains(&KeyCode::E) {
+                if let Some(closest_item) = entity::get_component(
+                    local_player_entity,
+                    crate::components::items::search_result(),
+                ) {
+                    PlayerPickUpItemInput::new(closest_item).send_server_reliable();
+                } else {
+                    eprintln!("No closest item to pick up?");
+                }
+            }
+
+            entity::remove_component(
+                local_player_entity,
+                crate::components::items::search_result(),
+            );
         }
     });
 

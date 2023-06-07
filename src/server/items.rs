@@ -5,7 +5,7 @@ use std::{
 
 use ambient_api::prelude::*;
 
-use crate::components::{crafting::*, player};
+use crate::components::{crafting::*, items::class_ref, map};
 use crate::player::PlayerEntities;
 
 lazy_static::lazy_static! {
@@ -137,6 +137,31 @@ pub fn init_server_items() {
         let right_held = player.right_held;
         player.set_left_held(right_held);
         player.set_right_held(left_held);
+    });
+
+    crate::messages::PlayerPickUpItemInput::subscribe(move |source, data| {
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
+
+        match entity::get_component(data.target, map::position()) {
+            Some(_) => {}   // TODO range checking for pickups
+            None => return, // invalid item grab
+        }
+
+        let Some(class) = entity::get_component(data.target, class_ref()) else {
+            eprintln!("Item {:?} has no class", data.target);
+            return;
+        };
+
+        if player.right_held.is_null() {
+            player.set_right_held(class);
+        } else if player.left_held.is_null() {
+            player.set_left_held(class);
+        } else {
+            return;
+        }
+
+        // item is no longer on the map
+        entity::remove_component(data.target, map::position());
     });
 
     // temp crafting recipe

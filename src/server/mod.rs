@@ -6,7 +6,6 @@ mod crop;
 mod fauna;
 mod items;
 mod map;
-mod partitioning;
 mod player;
 
 #[path = "../shared/mod.rs"]

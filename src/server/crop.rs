@@ -5,7 +5,7 @@ use crate::{components::*, messages};
 /// Sets up crop-related systems.
 pub fn init_crops() {
     // init cover crop searching
-    crate::partitioning::init_qbvh(
+    crate::shared::partitioning::init_qbvh(
         cover_crop_occupant(),
         search_cover_crop_radius(),
         search_cover_crop_result(),

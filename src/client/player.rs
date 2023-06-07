@@ -17,35 +17,7 @@ use crate::{
 /// Initializes player-related systems. Returns the local player entity ID.
 pub async fn init_players() -> EntityId {
     on_player_spawn(|player_entity, user, is_local_player| {
-        if !is_local_player {
-            // TODO player models for other players
-            entity::add_components(
-                player_entity,
-                Entity::new()
-                    .with_merge(make_transformable())
-                    .with(
-                        prefab_from_url(),
-                        asset::url("assets/player/player.glb").unwrap(),
-                    )
-                    .with(color(), vec4(1.0, 0.0, 0.0, 1.0)),
-            );
-
-            return;
-        }
-
-        let head = Entity::new()
-            .with_merge(make_perspective_infinite_reverse_camera())
-            .with(aspect_ratio_from_window(), EntityId::resources())
-            .with_default(main_scene())
-            .with(user_id(), user.clone())
-            .with(translation(), Vec3::Z * 1.5)
-            .with_default(local_to_parent())
-            .with(rotation(), Quat::from_rotation_x(FRAC_PI_2))
-            .spawn();
-
-        entity::add_child(player_entity, head);
-
-        let init_hand = |hand_ref, offset| {
+        let init_hand = |parent, hand_ref, offset| {
             let e = entity::get_component(player_entity, hand_ref)
                 .expect("Loaded player entity does not have hand reference component");
 
@@ -60,22 +32,60 @@ pub async fn init_players() -> EntityId {
                     .with(scale(), Vec3::splat(0.1)),
             );
 
-            entity::add_child(head, e);
+            entity::add_child(parent, e);
         };
 
-        init_hand(left_hand_ref(), Vec3::new(-0.5, -0.4, 1.0));
-        init_hand(right_hand_ref(), Vec3::new(0.5, -0.4, 1.0));
+        if is_local_player {
+            let head = Entity::new()
+                .with_merge(make_perspective_infinite_reverse_camera())
+                .with(aspect_ratio_from_window(), EntityId::resources())
+                .with_default(main_scene())
+                .with(user_id(), user.clone())
+                .with(translation(), Vec3::Z * 1.5)
+                .with_default(local_to_parent())
+                .with(rotation(), Quat::from_rotation_x(FRAC_PI_2))
+                .spawn();
 
-        entity::add_components(
-            player_entity,
-            Entity::new()
-                .with_merge(make_transformable())
-                .with_default(local_player())
-                .with_default(cube())
-                .with(head_ref(), head),
-        );
+            entity::add_child(player_entity, head);
 
-        entity::add_component(entity::resources(), local_player_ref(), player_entity);
+            init_hand(head, left_hand_ref(), Vec3::new(-0.5, -0.4, 1.0));
+            init_hand(head, right_hand_ref(), Vec3::new(0.5, -0.4, 1.0));
+
+            entity::add_components(
+                player_entity,
+                Entity::new()
+                    .with_merge(make_transformable())
+                    .with_default(local_player())
+                    .with_default(cube())
+                    .with(head_ref(), head),
+            );
+
+            entity::add_component(entity::resources(), local_player_ref(), player_entity);
+        } else {
+            // hand offsets eyeballed to line up with temp player model hands
+            init_hand(
+                player_entity,
+                left_hand_ref(),
+                Vec3::new(-0.648, 0.0, 0.945),
+            );
+
+            init_hand(
+                player_entity,
+                right_hand_ref(),
+                Vec3::new(0.648, 0.0, 0.945),
+            );
+
+            entity::add_components(
+                player_entity,
+                Entity::new()
+                    .with_merge(make_transformable())
+                    .with(
+                        prefab_from_url(),
+                        asset::url("assets/player/player.glb").unwrap(),
+                    )
+                    .with(color(), vec4(1.0, 0.0, 0.0, 1.0)),
+            );
+        }
     });
 
     change_query((player(), yaw(), pitch()))

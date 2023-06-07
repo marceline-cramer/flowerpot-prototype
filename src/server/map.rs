@@ -182,6 +182,21 @@ pub fn init_map() {
             }
         });
 
+    // spawn some items on the ground
+    {
+        use crate::items::*;
+
+        Entity::new()
+            .with(map::position(), vec2(10.0, 15.0))
+            .with(items::class_ref(), *BLUE_ITEM)
+            .spawn();
+
+        Entity::new()
+            .with(map::position(), vec2(17.0, 13.0))
+            .with(items::class_ref(), *YELLOW_ITEM)
+            .spawn();
+    }
+
     // TODO make bunnies fun to code and important to gameplay
     return;
 

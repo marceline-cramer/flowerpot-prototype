@@ -96,3 +96,11 @@ fields = {}
 name = "PlayerSwapItemsInput"
 description = "Message sent when a player swaps their two held items."
 fields = {}
+
+[messages.player_pick_up_item_input]
+name = "PlayerPickUpItemInput"
+description = "Message sent when a player picks up an item."
+
+[messages.player_pick_up_item_input.fields.target]
+type = "EntityId"
+description = "The item to pick up."

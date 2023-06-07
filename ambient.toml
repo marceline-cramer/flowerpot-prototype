@@ -66,19 +66,19 @@ attributes = ["Debuggable"]
 type = "Vec2"
 name = "MapPosition"
 description = "The position of this entity in map coordinates."
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components.map_elevation]
 type = "F32"
 name = "MapElevation"
 description = "The elevation of this entity above the map in meters."
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components.on_tile]
 type = "EntityId"
 name = "OnTile"
 description = "The entity ID of the tile that this entity is on top of."
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components.fauna]
 type = "Empty"

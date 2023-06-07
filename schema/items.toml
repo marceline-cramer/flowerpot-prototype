@@ -7,3 +7,18 @@ type = "EntityId"
 name = "ClassRef"
 description = "A reference to this entities' item class."
 attributes = ["Debuggable", "Networked"]
+
+[components."items::search_radius"]
+type = "F32"
+name = "Search Radius"
+description = """
+Attach this component to an entity with a map position to search the map for
+the nearest item within the search radius. The result will be placed into the
+search_result component.
+"""
+
+[components."items::search_result"]
+type = "EntityId"
+name = "Search Result"
+description = "A result of a spatial query for items."
+attributes = ["Debuggable"]

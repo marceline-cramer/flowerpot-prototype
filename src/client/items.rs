@@ -3,6 +3,12 @@ use ambient_api::{components::core::primitives::cube, prelude::*};
 use crate::components::{items, map, player};
 
 pub fn init_items() {
+    crate::shared::partitioning::init_qbvh(
+        items::class_ref(),
+        items::search_radius(),
+        items::search_result(),
+    );
+
     change_query(player::held_item_ref())
         .track_change(player::held_item_ref())
         .bind(move |changes| {

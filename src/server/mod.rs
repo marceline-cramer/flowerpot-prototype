@@ -9,6 +9,9 @@ mod map;
 mod partitioning;
 mod player;
 
+#[path = "../shared/mod.rs"]
+mod shared;
+
 #[main]
 pub fn main() {
     make_transformable()

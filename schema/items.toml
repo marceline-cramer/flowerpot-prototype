@@ -1,0 +1,9 @@
+[components.items]
+name = "Items"
+description = "Item-related components."
+
+[components."items::class_ref"]
+type = "EntityId"
+name = "ClassRef"
+description = "A reference to this entities' item class."
+attributes = ["Debuggable", "Networked"]

@@ -20,6 +20,14 @@ A tag attached to a player entity when all of its server-side setup has been
 completed and client-side setup is ready to begin.
 """
 
+[components."player::local_player_ref"]
+type = "EntityId"
+name = "LocalPlayerRef"
+attributes = ["Debuggable", "MaybeResource"]
+description = """
+A client-only resource referencing the root of the local player entity.
+"""
+
 [components."player::local_player"]
 type = "Empty"
 name = "LocalPlayer"
@@ -40,6 +48,16 @@ attributes = ["Debuggable", "Networked"]
 [components."player::pitch"]
 type = "F32"
 attributes = ["Debuggable", "Networked"]
+
+[components."player::local_yaw"]
+type = "F32"
+attributes = ["Debuggable"]
+description = "Local-only player yaw."
+
+[components."player::local_pitch"]
+type = "F32"
+attributes = ["Debuggable"]
+description = "Local-only player pitch."
 
 [components."player::left_hand_ref"]
 type = "EntityId"

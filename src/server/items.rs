@@ -10,14 +10,17 @@ use crate::player::PlayerEntities;
 
 lazy_static::lazy_static! {
     pub static ref BLUE_ITEM: EntityId = Entity::new()
+        .with(name(), "Blue Item".into())
         .with(color(), vec4(0.0, 0.0, 1.0, 1.0))
         .spawn();
 
     pub static ref GREEN_ITEM: EntityId = Entity::new()
+        .with(name(), "Green Item".into())
         .with(color(), vec4(0.0, 1.0, 0.0, 1.0))
         .spawn();
 
     pub static ref YELLOW_ITEM: EntityId = Entity::new()
+        .with(name(), "Yellow Item".into())
         .with(color(), vec4(1.0, 1.0, 0.0, 1.0))
         .spawn();
 }

@@ -136,6 +136,21 @@ pub fn init_server_items() {
         }
     });
 
+    crate::messages::PlayerSwapItemsInput::subscribe(move |source, _| {
+        let Some(player_entity) = source.client_entity_id() else { return; };
+        let Some(left_hand) = entity::get_component(player_entity, player::left_hand_ref()) else { return; };
+        let Some(right_hand) = entity::get_component(player_entity, player::right_hand_ref()) else { return; };
+
+        let left_held =
+            entity::get_component(left_hand, player::held_item_ref()).unwrap_or_default();
+
+        let right_held =
+            entity::get_component(right_hand, player::held_item_ref()).unwrap_or_default();
+
+        entity::add_component(left_hand, player::held_item_ref(), right_held);
+        entity::add_component(right_hand, player::held_item_ref(), left_held);
+    });
+
     // temp crafting recipe
     Entity::new()
         .with_default(recipe())

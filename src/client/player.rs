@@ -12,7 +12,7 @@ use ambient_api::{
 
 use crate::{
     components::player::*,
-    messages::{PlayerCraftInput, PlayerMovementInput},
+    messages::{PlayerCraftInput, PlayerMovementInput, PlayerSwapItemsInput},
 };
 
 /// Initializes player-related systems. Returns the local player entity ID.
@@ -152,6 +152,10 @@ pub async fn init_players() -> EntityId {
 
             if input_delta.keys.contains(&KeyCode::Q) {
                 PlayerCraftInput::new().send_server_reliable();
+            }
+
+            if input_delta.keys.contains(&KeyCode::F) {
+                PlayerSwapItemsInput::new().send_server_reliable();
             }
         }
     });

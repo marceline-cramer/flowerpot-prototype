@@ -91,3 +91,8 @@ description = "The movement direction of the player relative to the yaw. This is
 name = "PlayerCraftInput"
 description = "Message sent when a player attempts to craft the two held items."
 fields = {}
+
+[messages.player_swap_items_input]
+name = "PlayerSwapItemsInput"
+description = "Message sent when a player swaps their two held items."
+fields = {}

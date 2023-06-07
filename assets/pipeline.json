@@ -1,0 +1,43 @@
+[{
+  "pipeline": {
+    "type": "Materials",
+    "importer": {
+      "type": "Single",
+      "name": "tree",
+      "base_color": "tree.png"
+    },
+    "output_quads": true
+  }
+},
+{
+    "pipeline": {
+      "type": "Materials",
+      "importer": {
+        "type": "Single",
+        "name": "mushroom",
+        "base_color": "mushroom.png"
+      },
+      "output_quads": true
+    }
+  },
+    {
+        "pipeline": {
+          "type": "Materials",
+          "importer": {
+            "type": "Single",
+            "name": "rock",
+            "base_color": "rock.png"
+          },
+          "output_quads": true
+        }
+      },
+    {
+        "pipeline": {
+          "type": "Audio"
+        }
+    },
+    {
+        "pipeline": {
+          "type": "Models"
+        }
+      }]

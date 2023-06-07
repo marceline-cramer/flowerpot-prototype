@@ -1,31 +1,42 @@
 use ambient_api::{components::core::primitives::cube, prelude::*};
 
-use crate::components::player;
+use crate::components::{items, map, player};
 
 pub fn init_items() {
-    change_query((player::held_item_ref(), user_id()))
+    change_query(player::held_item_ref())
         .track_change(player::held_item_ref())
         .bind(move |changes| {
-            for (hand, (item, uid)) in changes {
-                for child in entity::get_component(hand, children()).unwrap_or_default() {
-                    entity::despawn_recursive(child);
-                }
-
-                if item.is_null() {
-                    continue;
-                }
-
-                let item_color = entity::get_component(item, color());
-                let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
-
-                let item_instance = Entity::new()
-                    .with_default(local_to_parent())
-                    .with_default(cube())
-                    .with(color(), new_color)
-                    .with(user_id(), uid)
-                    .spawn();
-
-                entity::add_child(hand, item_instance);
+            for (hand, class) in changes {
+                spawn_item_model(hand, class);
             }
         });
+
+    spawn_query((map::position(), items::class_ref())).bind(move |items| {
+        for (e, (_map_pos, class)) in items {
+            entity::add_component(e, local_to_world(), Default::default());
+            spawn_item_model(e, class);
+        }
+    });
+}
+
+/// Helper function to spawn models of items.
+fn spawn_item_model(parent: EntityId, class: EntityId) {
+    for child in entity::get_component(parent, children()).unwrap_or_default() {
+        entity::despawn_recursive(child);
+    }
+
+    if class.is_null() {
+        return;
+    }
+
+    let item_color = entity::get_component(class, color());
+    let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
+
+    let item_instance = Entity::new()
+        .with_default(local_to_parent())
+        .with_default(cube())
+        .with(color(), new_color)
+        .spawn();
+
+    entity::add_child(parent, item_instance);
 }

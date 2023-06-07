@@ -1,16 +1,21 @@
-use std::f32::consts::FRAC_PI_2;
+use std::f32::consts::{FRAC_PI_2, TAU};
 
 use ambient_api::{
     components::core::{
         camera::aspect_ratio_from_window, prefab::prefab_from_url, primitives::cube,
     },
     concepts::{make_perspective_infinite_reverse_camera, make_transformable},
+    messages::Frame,
     prelude::*,
 };
 
-use crate::components::player::*;
+use crate::{
+    components::player::*,
+    messages::{PlayerCraftInput, PlayerMovementInput},
+};
 
-pub fn init_players() {
+/// Initializes player-related systems. Returns the local player entity ID.
+pub async fn init_players() -> EntityId {
     on_player_spawn(|player_entity, user, is_local_player| {
         if !is_local_player {
             // TODO player models for other players
@@ -69,22 +74,79 @@ pub fn init_players() {
                 .with_default(cube())
                 .with(head_ref(), head),
         );
+
+        entity::add_component(entity::resources(), local_player_ref(), player_entity);
     });
 
     change_query((player(), yaw(), pitch()))
         .track_change((yaw(), pitch()))
+        .excludes(local_player())
         .bind(move |players| {
             for (e, (_player, yaw, pitch)) in players {
-                entity::add_component(e, rotation(), Quat::from_rotation_z(yaw));
-                if let Some(head) = entity::get_component(e, head_ref()) {
-                    entity::add_component(
-                        head,
-                        rotation(),
-                        Quat::from_rotation_x(FRAC_PI_2 + pitch),
-                    );
-                }
+                update_player_yaw_pitch(e, yaw, pitch);
             }
         });
+
+    change_query((player(), local_player(), local_yaw(), local_pitch()))
+        .track_change((local_yaw(), local_pitch()))
+        .bind(move |players| {
+            for (e, (_, _, yaw, pitch)) in players {
+                update_player_yaw_pitch(e, yaw, pitch);
+            }
+        });
+
+    let local_player_entity = entity::wait_for_component(entity::resources(), local_player_ref())
+        .await
+        .expect("local_player_ref resource was deleted");
+
+    Frame::subscribe({
+        let mut cursor_lock = input::CursorLockGuard::new(true);
+        let mut pitch = 0.0;
+        let mut yaw = 0.0;
+        let mut craft_last = false;
+        move |_| {
+            let input = input::get();
+            if !cursor_lock.auto_unlock_on_escape(&input) {
+                return;
+            }
+
+            let mut direction = Vec2::ZERO;
+            let speed = 1.0; // always 1.0 because PlayerMovementInput is normalized
+            if input.keys.contains(&KeyCode::W) {
+                direction.y -= speed;
+            }
+            if input.keys.contains(&KeyCode::S) {
+                direction.y += speed;
+            }
+            if input.keys.contains(&KeyCode::A) {
+                direction.x -= speed;
+            }
+            if input.keys.contains(&KeyCode::D) {
+                direction.x += speed;
+            }
+
+            let direction = direction.normalize();
+
+            let pitch_factor = 0.01;
+            let yaw_factor = 0.01;
+            yaw = (yaw + input.mouse_delta.x * yaw_factor) % TAU;
+            pitch = (pitch + input.mouse_delta.y * pitch_factor).clamp(-FRAC_PI_2, FRAC_PI_2);
+
+            PlayerMovementInput::new(direction, pitch, yaw).send_server_reliable();
+
+            entity::add_component(local_player_entity, local_yaw(), yaw);
+            entity::add_component(local_player_entity, local_pitch(), pitch);
+
+            let craft_pressed = input.keys.contains(&KeyCode::Q);
+            if !craft_last && craft_pressed {
+                PlayerCraftInput::new().send_server_reliable();
+            }
+
+            craft_last = craft_pressed;
+        }
+    });
+
+    local_player_entity
 }
 
 /// Helper function to run a closure when player entities finish loading.
@@ -101,16 +163,10 @@ pub fn on_player_spawn(cb: impl Fn(EntityId, String, bool) + 'static) {
     });
 }
 
-lazy_static::lazy_static! {
-    pub static ref LOCAL_PLAYER_ENTITY: EntityId = {
-        let (e_tx, e_rx) = std::sync::mpsc::sync_channel(0);
-
-        on_player_spawn(move |e, _user, is_local| {
-            if is_local {
-                let _ = e_tx.send(e);
-            }
-        });
-
-        e_rx.recv().unwrap()
-    };
+/// Helper function to update the yaw of a player and optionally its head's pitch.
+pub fn update_player_yaw_pitch(e: EntityId, yaw: f32, pitch: f32) {
+    entity::add_component(e, rotation(), Quat::from_rotation_z(yaw));
+    if let Some(head) = entity::get_component(e, head_ref()) {
+        entity::add_component(head, rotation(), Quat::from_rotation_x(FRAC_PI_2 + pitch));
+    }
 }

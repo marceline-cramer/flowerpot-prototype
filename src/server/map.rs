@@ -173,9 +173,6 @@ pub fn init_map() {
             let map = map.clone();
             move |changes| {
                 for (e, xy) in changes {
-                    let elevation = entity::get_component(e, map_elevation()).unwrap_or(0.0);
-                    entity::add_component(e, translation(), xy.extend(elevation));
-
                     let xy = (xy + 0.5).floor().as_ivec2();
                     match map.get(&xy) {
                         None => entity::remove_component(e, on_tile()),

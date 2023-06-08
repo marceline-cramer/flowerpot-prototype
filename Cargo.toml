@@ -10,6 +10,14 @@ ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "8eb1a7
 lazy_static = "1.4"
 parry2d = "0.13"
 slab = "0.4"
+#ambient_sproutz = {git = "https://github.com/mebyz/ambient_sproutz.git"}
+rand_pcg = "0.3.1"
+noise = { version = "0.8.2", features = ["images"] }
+palette = "0.7.1"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+serde = "1.0.163"
+image = "0.24.6"
 
 [[bin]]
 name = "client_flowerpot_prototype"

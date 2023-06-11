@@ -195,6 +195,15 @@ pub fn init_map() {
             .with(map::position(), vec2(17.0, 13.0))
             .with(items::class_ref(), *YELLOW_ITEM)
             .spawn();
+
+        for corn in 1..=4 {
+            let prefab = format!("assets/crops/corn{}.glb", corn);
+
+            Entity::new()
+                .with(map::position(), vec2(corn as f32, 0.0))
+                .with(prefab_from_url(), asset::url(prefab).unwrap())
+                .spawn();
+        }
     }
 
     // TODO make bunnies fun to code and important to gameplay

@@ -8,23 +8,6 @@ use ambient_api::prelude::*;
 use crate::components::{crafting::*, items::class_ref, map};
 use crate::player::PlayerEntities;
 
-lazy_static::lazy_static! {
-    pub static ref BLUE_ITEM: EntityId = Entity::new()
-        .with(name(), "Blue Item".into())
-        .with(color(), vec4(0.0, 0.0, 1.0, 1.0))
-        .spawn();
-
-    pub static ref GREEN_ITEM: EntityId = Entity::new()
-        .with(name(), "Green Item".into())
-        .with(color(), vec4(0.0, 1.0, 0.0, 1.0))
-        .spawn();
-
-    pub static ref YELLOW_ITEM: EntityId = Entity::new()
-        .with(name(), "Yellow Item".into())
-        .with(color(), vec4(1.0, 1.0, 0.0, 1.0))
-        .spawn();
-}
-
 /// Wasm-side crafting recipe data.
 pub struct CraftingRecipe {
     pub recipe_entity: EntityId,
@@ -190,13 +173,4 @@ pub fn init_server_items() {
             .with(class_ref(), class)
             .spawn();
     });
-
-    // temp crafting recipe
-    Entity::new()
-        .with_default(recipe())
-        .with(primary_ingredient(), *BLUE_ITEM)
-        .with(secondary_ingredient(), *YELLOW_ITEM)
-        .with(primary_yield(), *GREEN_ITEM)
-        .with(secondary_yield(), EntityId::null())
-        .spawn();
 }

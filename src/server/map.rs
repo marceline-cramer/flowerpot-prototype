@@ -184,7 +184,7 @@ pub fn init_map() {
 
     // spawn some items on the ground
     {
-        use crate::items::*;
+        use crate::data::*;
 
         Entity::new()
             .with(map::position(), vec2(10.0, 15.0))

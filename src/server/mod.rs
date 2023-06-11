@@ -3,6 +3,7 @@ use ambient_api::{concepts::make_transformable, prelude::*};
 use components::{map::position, *};
 
 mod crop;
+mod data;
 mod fauna;
 mod items;
 mod map;
@@ -45,6 +46,7 @@ pub fn main() {
     });
 
     crop::init_crops();
+    data::init_data();
     fauna::init_fauna();
     items::init_server_items();
     map::init_map();

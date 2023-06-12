@@ -47,7 +47,7 @@ pub mod items {
     def_entity!(
         MAIZE_SEEDS,
         name: "Maize Seeds",
-        prefab_path: "assets/crops/corn seeds.glb",
+        prefab_path: "assets/crops/maize_seeds.glb",
     );
 }
 
@@ -58,24 +58,24 @@ pub mod crops {
 
     def_entity!(
         MAIZE,
-        prefab_url: "assets/crops/corn4.glb",
+        prefab_url: "assets/crops/maize4.glb",
     );
 
     def_entity!(
         MAIZE_STAGE_3,
-        prefab_url: "assets/crops/corn3.glb",
+        prefab_url: "assets/crops/maize3.glb",
         next_growth_phase_ref: *MAIZE,
     );
 
     def_entity!(
         MAIZE_STAGE_2,
-        prefab_url: "assets/crops/corn2.glb",
+        prefab_url: "assets/crops/maize2.glb",
         next_growth_phase_ref: *MAIZE_STAGE_3,
     );
 
     def_entity!(
         MAIZE_STAGE_1,
-        prefab_url: "assets/crops/corn1.glb",
+        prefab_url: "assets/crops/maize1.glb",
         next_growth_phase_ref: *MAIZE_STAGE_2,
     );
 }

@@ -56,7 +56,7 @@ pub fn init_crops() {
 
     run_async(async move {
         loop {
-            sleep(10.0).await;
+            sleep(1.0).await;
             messages::GrowTick::new().send_local_broadcast(true);
         }
     });

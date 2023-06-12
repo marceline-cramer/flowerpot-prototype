@@ -1,4 +1,7 @@
-use ambient_api::{components::core::primitives::cube, prelude::*};
+use ambient_api::{
+    components::core::{prefab::prefab_from_url, primitives::cube},
+    prelude::*,
+};
 
 use crate::components::{items, map, player};
 
@@ -43,14 +46,17 @@ fn spawn_item_model(parent: EntityId, class: EntityId) {
         return;
     }
 
-    let item_color = entity::get_component(class, color());
-    let new_color = item_color.unwrap_or(vec4(1.0, 0.0, 1.0, 1.0));
+    let mut item_instance = Entity::new().with_default(local_to_parent());
 
-    let item_instance = Entity::new()
-        .with_default(local_to_parent())
-        .with_default(cube())
-        .with(color(), new_color)
-        .spawn();
+    if let Some(new_color) = entity::get_component(class, color()) {
+        item_instance.set(color(), new_color);
+    }
 
-    entity::add_child(parent, item_instance);
+    if let Some(prefab) = entity::get_component(class, items::prefab_path()) {
+        item_instance.set(prefab_from_url(), asset::url(prefab).unwrap());
+    } else {
+        item_instance.set(cube(), ());
+    }
+
+    entity::add_child(parent, item_instance.spawn());
 }

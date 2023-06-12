@@ -26,8 +26,8 @@ pub async fn init_players() -> EntityId {
                     .with_default(local_to_parent())
                     .with_default(local_to_world())
                     .with(translation(), offset)
-                    .with(rotation(), Quat::IDENTITY)
-                    .with(scale(), Vec3::splat(0.1)),
+                    .with(rotation(), Quat::from_rotation_x(-FRAC_PI_2))
+                    .with(scale(), Vec3::splat(0.3)),
             );
 
             entity::add_child(parent, e);

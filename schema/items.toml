@@ -22,3 +22,9 @@ type = "EntityId"
 name = "Search Result"
 description = "A result of a spatial query for items."
 attributes = ["Debuggable"]
+
+[components."items::prefab_path"]
+type = "String"
+name = "PrefabPath"
+description = "The asset path to this item's model prefab."
+attributes = ["Debuggable", "Networked"]

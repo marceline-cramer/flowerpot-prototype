@@ -39,6 +39,18 @@ def_entity!(
     color: vec4(1.0, 1.0, 0.0, 1.0),
 );
 
+pub mod items {
+    use super::*;
+
+    pub use crate::components::items::*;
+
+    def_entity!(
+        MAIZE_SEEDS,
+        name: "Maize Seeds",
+        prefab_path: "assets/crops/corn seeds.glb",
+    );
+}
+
 pub mod crops {
     use super::*;
 

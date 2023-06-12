@@ -39,8 +39,44 @@ def_entity!(
     color: vec4(1.0, 1.0, 0.0, 1.0),
 );
 
+pub mod crops {
+    use super::*;
+
+    use crate::components::crops::*;
+
+    def_entity!(
+        MAIZE,
+        prefab_url: "assets/crops/corn4.glb",
+    );
+
+    def_entity!(
+        MAIZE_STAGE_3,
+        prefab_url: "assets/crops/corn3.glb",
+        next_growth_phase_ref: *MAIZE,
+    );
+
+    def_entity!(
+        MAIZE_STAGE_2,
+        prefab_url: "assets/crops/corn2.glb",
+        next_growth_phase_ref: *MAIZE_STAGE_3,
+    );
+
+    def_entity!(
+        MAIZE_STAGE_1,
+        prefab_url: "assets/crops/corn1.glb",
+        next_growth_phase_ref: *MAIZE_STAGE_2,
+    );
+}
+
 pub fn init_data() {
     use crate::components::crafting::*;
+
+    // TODO better cyclic data definitions
+    entity::add_component(
+        *crops::MAIZE,
+        crate::components::crops::seed_ref(),
+        *crops::MAIZE_STAGE_1,
+    );
 
     spawn_entity!(
         recipe: (),

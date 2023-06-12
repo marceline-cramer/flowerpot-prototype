@@ -196,14 +196,13 @@ pub fn init_map() {
             .with(items::class_ref(), *YELLOW_ITEM)
             .spawn();
 
-        for corn in 1..=4 {
-            let prefab = format!("assets/crops/corn{}.glb", corn);
+        let maize_tile = *map.get(&IVec2::new(0, 0)).unwrap();
 
-            Entity::new()
-                .with(map::position(), vec2(corn as f32, 0.0))
-                .with(prefab_from_url(), asset::url(prefab).unwrap())
-                .spawn();
-        }
+        entity::add_component(
+            maize_tile,
+            crate::components::crops::medium_occupant_ref(),
+            crate::crop::new_medium(*crops::MAIZE_STAGE_1, maize_tile),
+        );
     }
 
     // TODO make bunnies fun to code and important to gameplay

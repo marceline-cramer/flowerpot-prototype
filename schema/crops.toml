@@ -1,0 +1,35 @@
+[components.crops]
+name = "Crops"
+description = "Components relating to properties of crops."
+
+[components."crops::class_ref"]
+type = "EntityId"
+name = "ClassRef"
+attributes = ["Debuggable", "Networked"]
+
+[components."crops::seed_ref"]
+type = "EntityId"
+name = "SeedRef"
+attributes = ["Debuggable", "Networked"]
+
+[components."crops::next_growth_phase_ref"]
+type = "EntityId"
+name = "NextGrowthPhaseRef"
+attributes = ["Debuggable", "Networked"]
+
+[components."crops::prefab_url"]
+type = "String"
+name = "PrefabUrl"
+attributes = ["Debuggable", "Networked"]
+
+[components."crops::medium_occupant_ref"]
+type = "EntityId"
+name = "MediumCropOccupant"
+description = "The entity ID of the medium crop class occupying this tile."
+attributes = ["Debuggable", "Networked"]
+
+[components."crops::is_medium_crop"]
+type = "Empty"
+name = "IsMediumCrop"
+description = "A tag given to all instances of medium crops."
+attributes = ["Debuggable", "Networked"]

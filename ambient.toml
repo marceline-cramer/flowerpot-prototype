@@ -5,6 +5,7 @@ version = "0.0.1"
 
 includes = [
   "schema/crafting.toml",
+  "schema/crops.toml",
   "schema/items.toml",
   "schema/map.toml",
   "schema/player.toml",

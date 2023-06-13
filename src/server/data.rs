@@ -48,6 +48,7 @@ pub mod items {
         MAIZE_SEEDS,
         name: "Maize Seeds",
         prefab_path: "assets/crops/maize_seeds.glb",
+        plantable_crop_class_ref: *super::crops::MAIZE_STAGE_1,
     );
 }
 

@@ -24,7 +24,7 @@ attributes = ["Debuggable", "Networked"]
 type = "Empty"
 name = "Tile"
 description = "A tag belonging to all tile entities."
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components."map::west_neighbor_ref"]
 type = "EntityId"
@@ -48,4 +48,10 @@ attributes = ["Debuggable"]
 type = "EntityId"
 name = "SouthNeighhborRef"
 description = "The entity ID of the tile south of this tile."
+attributes = ["Debuggable"]
+
+[components."map::soil"]
+type = "Empty"
+name = "Soil"
+description = "A tag belonging to all soil tiles."
 attributes = ["Debuggable"]

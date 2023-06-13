@@ -11,17 +11,11 @@ includes = [
   "schema/player.toml",
 ]
 
-[components.soil]
-type = "Empty"
-name = "soil"
-description = "A tag belonging to all soil tiles."
-attributes = ["Debuggable"]
-
 [components.cover_crop_occupant]
 type = "EntityId"
 name = "FaunaOccupant"
 description = "The entity ID of the cover crop class occupying this tile."
-attributes = ["Debuggable"]
+attributes = ["Debuggable", "Networked"]
 
 [components.cover_crop]
 type = "Empty"

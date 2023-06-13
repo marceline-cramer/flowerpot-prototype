@@ -1,11 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use ambient_api::{
-    components::core::{prefab::prefab_from_url, primitives::quad},
-    concepts::make_transformable,
-    glam::IVec2,
-    prelude::*,
-    rand,
+    components::core::prefab::prefab_from_url, concepts::make_transformable, glam::IVec2,
+    prelude::*, rand,
 };
 
 use crate::components::*;
@@ -84,20 +81,16 @@ pub fn init_map() {
         .spawn();
 
     // spawn some initial tiles and store their IDs
-    let mut rng = rand::thread_rng();
     let mut map = HashMap::new();
-    let map_width = 32;
-    let map_height = 32;
+    let map_width = 256;
+    let map_height = 256;
     for x in 0..map_width {
         for y in 0..map_height {
             let xy = IVec2::new(x, y);
 
             let tile = Entity::new()
-                .with_merge(make_transformable())
-                .with(translation(), Vec3::new(x as f32, y as f32, 0.0))
-                .with_default(quad())
                 .with_default(map::tile())
-                .with_default(soil())
+                .with_default(map::soil())
                 .with(cover_crop_occupant(), grass)
                 .with(map::position(), xy.as_vec2())
                 .spawn();
@@ -142,31 +135,7 @@ pub fn init_map() {
             }
         });
 
-    // set soil tiles material
-    spawn_query((map::tile(), soil()))
-        .excludes(cover_crop_occupant())
-        .bind(move |tiles| {
-            for (e, (_, _)) in tiles {
-                entity::set_component(
-                    e,
-                    pbr_material_from_url(),
-                    asset::url("assets/materials/materials/pipeline.json/0/mat.json").unwrap(),
-                );
-            }
-        });
-
-    // update materials of tiles with cover crops
-    change_query((map::tile(), cover_crop_occupant()))
-        .track_change(cover_crop_occupant())
-        .bind(move |tiles| {
-            for (e, (_, cover_crop)) in tiles {
-                if let Some(new_mat) = entity::get_component(cover_crop, pbr_material_from_url()) {
-                    entity::add_component(e, pbr_material_from_url(), new_mat);
-                }
-            }
-        });
-
-    // update entities' translation and OnTile with map coordinates
+    // update entities' on_tile based on map_position
     change_query(map::position())
         .track_change(map::position())
         .bind({
@@ -214,6 +183,7 @@ pub fn init_map() {
     return;
 
     // spawn some bunnies
+    let mut rng = rand::thread_rng();
     for tile in map
         .values()
         .collect::<Vec<_>>()

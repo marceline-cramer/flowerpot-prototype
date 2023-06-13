@@ -4,7 +4,7 @@ use ambient_api::{
     components::core::{
         camera::aspect_ratio_from_window, prefab::prefab_from_url, primitives::cube,
     },
-    concepts::{make_perspective_infinite_reverse_camera, make_sphere, make_transformable},
+    concepts::{make_perspective_infinite_reverse_camera, make_transformable},
     input::get_previous,
     messages::Frame,
     prelude::*,
@@ -52,12 +52,6 @@ pub async fn init_players() -> EntityId {
             init_hand(head, left_hand_ref(), Vec3::new(-0.5, -0.4, 1.0));
             init_hand(head, right_hand_ref(), Vec3::new(0.5, -0.4, 1.0));
 
-            let target = make_sphere()
-                .with_merge(make_transformable())
-                .with(scale(), Vec3::splat(0.1))
-                .with(color(), vec4(1.0, 0.0, 0.0, 1.0))
-                .spawn();
-
             entity::add_components(
                 player_entity,
                 Entity::new()
@@ -65,7 +59,6 @@ pub async fn init_players() -> EntityId {
                     .with_default(local_player())
                     .with_default(cube())
                     .with(crate::components::items::search_radius(), 1.0)
-                    .with(targeted_ref(), target)
                     .with(head_ref(), head),
             );
 
@@ -211,12 +204,29 @@ pub async fn init_players() -> EntityId {
         }
 
         let intersection = ray_origin + ray_delta * ray_length;
+        let tile_target = crate::map::MAP
+            .lock()
+            .unwrap()
+            .get(&(intersection.xy() + 0.5).floor().as_ivec2())
+            .copied()
+            .unwrap_or(EntityId::null());
 
-        entity::add_component(
-            entity::get_component(local_player_entity, targeted_ref()).unwrap(),
-            translation(),
-            intersection,
-        );
+        // only select tiles for now
+        let target = tile_target;
+
+        // de-highlight previous target
+        if let Some(old_target) = entity::get_component(local_player_entity, targeted_ref()) {
+            if old_target != target {
+                entity::remove_component(old_target, outline_recursive());
+            }
+        }
+
+        if target.is_null() {
+            entity::remove_component(local_player_entity, targeted_ref());
+        } else {
+            entity::add_component(local_player_entity, targeted_ref(), target);
+            entity::add_component(target, outline_recursive(), vec4(1.0, 1.0, 1.0, 1.0));
+        }
     });
 
     local_player_entity

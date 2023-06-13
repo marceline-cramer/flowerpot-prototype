@@ -4,13 +4,16 @@ use ambient_api::{
     components::core::{
         camera::aspect_ratio_from_window, prefab::prefab_from_url, primitives::cube,
     },
-    concepts::{make_perspective_infinite_reverse_camera, make_transformable},
+    concepts::{make_perspective_infinite_reverse_camera, make_sphere, make_transformable},
     input::get_previous,
     messages::Frame,
     prelude::*,
 };
 
 use crate::{components::player::*, messages::*};
+
+// TODO make this a component?
+const HEAD_HEIGHT: f32 = 1.5;
 
 /// Initializes player-related systems. Returns the local player entity ID.
 pub async fn init_players() -> EntityId {
@@ -39,7 +42,7 @@ pub async fn init_players() -> EntityId {
                 .with(aspect_ratio_from_window(), EntityId::resources())
                 .with_default(main_scene())
                 .with(user_id(), user.clone())
-                .with(translation(), Vec3::Z * 1.5)
+                .with(translation(), Vec3::Z * HEAD_HEIGHT)
                 .with_default(local_to_parent())
                 .with(rotation(), Quat::from_rotation_x(FRAC_PI_2))
                 .spawn();
@@ -49,6 +52,12 @@ pub async fn init_players() -> EntityId {
             init_hand(head, left_hand_ref(), Vec3::new(-0.5, -0.4, 1.0));
             init_hand(head, right_hand_ref(), Vec3::new(0.5, -0.4, 1.0));
 
+            let target = make_sphere()
+                .with_merge(make_transformable())
+                .with(scale(), Vec3::splat(0.1))
+                .with(color(), vec4(1.0, 0.0, 0.0, 1.0))
+                .spawn();
+
             entity::add_components(
                 player_entity,
                 Entity::new()
@@ -56,6 +65,7 @@ pub async fn init_players() -> EntityId {
                     .with_default(local_player())
                     .with_default(cube())
                     .with(crate::components::items::search_radius(), 1.0)
+                    .with(targeted_ref(), target)
                     .with(head_ref(), head),
             );
 
@@ -180,6 +190,33 @@ pub async fn init_players() -> EntityId {
                 PlayerDropItemInput::new(true).send_server_reliable();
             }
         }
+    });
+
+    // update player target
+    Frame::subscribe(move |_| {
+        let Some(yaw) = entity::get_component(local_player_entity, local_yaw()) else { return };
+        let Some(pitch) = entity::get_component(local_player_entity, local_pitch()) else { return };
+        let Some(position) = entity::get_component(local_player_entity, translation()) else { return };
+
+        let ray_delta = Quat::from_rotation_z(yaw) * Quat::from_rotation_x(pitch) * -Vec3::Y;
+        let ray_origin = Vec3::Z * HEAD_HEIGHT + position;
+
+        println!("{:#?} {:#?}", ray_delta, ray_origin);
+
+        // calculate intersection with Z plane
+        let ray_length = -ray_origin.z / ray_delta.z;
+
+        if ray_length < 0.0 || !ray_length.is_finite() {
+            return;
+        }
+
+        let intersection = ray_origin + ray_delta * ray_length;
+
+        entity::add_component(
+            entity::get_component(local_player_entity, targeted_ref()).unwrap(),
+            translation(),
+            intersection,
+        );
     });
 
     local_player_entity

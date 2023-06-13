@@ -117,3 +117,15 @@ description = "Message sent when a player drops an item."
 [messages.player_drop_item_input.fields.hand]
 type = "Bool"
 description = "False to drop the left hand's item, true to drop the right hand's item."
+
+[messages.player_use_item_input]
+name = "PlayerUseItemInput"
+description = "Messsage sent when a player uses an item."
+
+[messages.player_use_item_input.fields.target_ref]
+type = "EntityId"
+description = "The entity ID of the entity to use the item on."
+
+[messages.player_use_item_input.fields.hand]
+type = "Bool"
+description = "False to use the left hand's item, true to use the right hand's item."

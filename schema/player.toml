@@ -71,6 +71,11 @@ attributes = ["Debuggable", "Networked"]
 type = "EntityId"
 attributes = ["Debuggable", "Networked"]
 
+[components."player::targeted_ref"]
+type = "EntityId"
+attributes = ["Debuggable"]
+description = "Client-side component identifying the entity that the player is currently targeting."
+
 [messages.player_movement_input]
 name = "PlayerMovementInput"
 description = "Client-to-server message to set the movement state of a player."

@@ -1,6 +1,14 @@
-use ambient_api::{components::core::primitives::quad, concepts::make_transformable, prelude::*};
+use std::{collections::HashMap, sync::Mutex};
+
+use ambient_api::{
+    components::core::primitives::quad, concepts::make_transformable, glam::IVec2, prelude::*,
+};
 
 use crate::components::{cover_crop_occupant, map::*};
+
+lazy_static::lazy_static! {
+    pub static ref MAP: Mutex<HashMap<IVec2, EntityId>> = Mutex::new(HashMap::new());
+}
 
 pub fn init_map() {
     // set new entities' translation with map_position
@@ -28,6 +36,24 @@ pub fn init_map() {
                     .with(translation(), xy.extend(0.0))
                     .with_default(quad()),
             );
+        }
+    });
+
+    // add tiles to the map
+    spawn_query((tile(), position())).bind(move |tiles| {
+        let mut map = MAP.lock().unwrap();
+        for (tile, (_, xy)) in tiles {
+            let xy = (xy + 0.5).floor().as_ivec2();
+            map.insert(xy, tile);
+        }
+    });
+
+    // remove tiles from the map
+    despawn_query((tile(), position())).bind(move |tiles| {
+        let mut map = MAP.lock().unwrap();
+        for (_tile, (_, xy)) in tiles {
+            let xy = (xy + 0.5).floor().as_ivec2();
+            map.remove(&xy);
         }
     });
 

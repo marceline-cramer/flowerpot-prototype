@@ -1,7 +1,3 @@
-use ambient_api::{concepts::make_transformable, prelude::*};
-
-use components::{map::position, *};
-
 mod crop;
 mod data;
 mod fauna;
@@ -12,8 +8,10 @@ mod player;
 #[path = "../shared/mod.rs"]
 mod shared;
 
-#[main]
-pub fn main() {
+fn init_server() {
+    use ambient_api::{concepts::make_transformable, prelude::*};
+    use components::{map::position, *};
+
     make_transformable()
         .with_default(sun())
         .with(rotation(), Quat::from_rotation_y(-45_f32.to_radians()))
@@ -44,6 +42,11 @@ pub fn main() {
             }
         }
     });
+}
+
+#[ambient_api::main]
+pub fn main() {
+    init_server();
 
     crop::init_crops();
     data::init_data();

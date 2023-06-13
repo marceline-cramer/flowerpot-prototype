@@ -1,6 +1,9 @@
 use ambient_api::{prelude::*, rand};
 
-use crate::{components::*, crops::*, messages};
+use crate::{
+    components::{crops::*, *},
+    messages,
+};
 
 /// Sets up crop-related systems.
 pub fn init_crops() {

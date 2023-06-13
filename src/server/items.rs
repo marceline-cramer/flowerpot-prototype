@@ -123,7 +123,7 @@ pub fn init_server_items() {
     });
 
     crate::messages::PlayerPickUpItemInput::subscribe(move |source, data| {
-        let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return };
 
         match entity::get_component(data.target, map::position()) {
             Some(_) => {}   // TODO range checking for pickups
@@ -148,7 +148,7 @@ pub fn init_server_items() {
     });
 
     crate::messages::PlayerDropItemInput::subscribe(move |source, data| {
-        let Some(mut player) = PlayerEntities::from_source(&source) else { return; };
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return };
 
         let Some(position) = entity::get_component(player.entity, map::position()) else {
             eprintln!("Player {:?} has no position", player.entity);

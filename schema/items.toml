@@ -28,3 +28,9 @@ type = "String"
 name = "PrefabPath"
 description = "The asset path to this item's model prefab."
 attributes = ["Debuggable", "Networked"]
+
+[components."items::plantable_crop_class_ref"]
+type = "EntityId"
+name = "PlantableCropClassRef"
+description = "Add to an item to make it plant the given crop class when used. This component should be replaced with a more robust item actions system."
+attributes = ["Debuggable", "Networked"]

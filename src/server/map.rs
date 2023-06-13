@@ -82,8 +82,8 @@ pub fn init_map() {
 
     // spawn some initial tiles and store their IDs
     let mut map = HashMap::new();
-    let map_width = 256;
-    let map_height = 256;
+    let map_width = 32;
+    let map_height = 32;
     for x in 0..map_width {
         for y in 0..map_height {
             let xy = IVec2::new(x, y);

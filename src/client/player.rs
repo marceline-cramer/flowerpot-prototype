@@ -182,6 +182,18 @@ pub async fn init_players() -> EntityId {
             if input_delta.keys.contains(&KeyCode::C) {
                 PlayerDropItemInput::new(true).send_server_reliable();
             }
+
+            if input_delta.mouse_buttons.contains(&MouseButton::Left) {
+                let target = entity::get_component(local_player_entity, targeted_ref())
+                    .unwrap_or(EntityId::null());
+                PlayerUseItemInput::new(false, target).send_server_reliable();
+            }
+
+            if input_delta.mouse_buttons.contains(&MouseButton::Right) {
+                let target = entity::get_component(local_player_entity, targeted_ref())
+                    .unwrap_or(EntityId::null());
+                PlayerUseItemInput::new(true, target).send_server_reliable();
+            }
         }
     });
 

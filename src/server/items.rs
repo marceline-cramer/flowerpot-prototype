@@ -5,7 +5,7 @@ use std::{
 
 use ambient_api::prelude::*;
 
-use crate::components::{crafting::*, items::class_ref, map};
+use crate::components::{crafting::*, crops::medium_occupant_ref, items::*, map};
 use crate::player::PlayerEntities;
 
 /// Wasm-side crafting recipe data.
@@ -172,5 +172,35 @@ pub fn init_server_items() {
             .with(map::position(), position)
             .with(class_ref(), class)
             .spawn();
+    });
+
+    crate::messages::PlayerUseItemInput::subscribe(move |source, data| {
+        let Some(mut player) = PlayerEntities::from_source(&source) else { return };
+
+        let held = if data.hand {
+            player.right_held
+        } else {
+            player.left_held
+        };
+
+        let Some(crop) = entity::get_component(held, plantable_crop_class_ref()) else { return };
+
+        if !entity::has_component(data.target_ref, map::tile())
+            || entity::has_component(data.target_ref, medium_occupant_ref())
+        {
+            return;
+        }
+
+        entity::add_component(
+            data.target_ref,
+            medium_occupant_ref(),
+            crate::crop::new_medium(crop, data.target_ref),
+        );
+
+        if data.hand {
+            player.set_right_held(EntityId::null());
+        } else {
+            player.set_left_held(EntityId::null());
+        }
     });
 }

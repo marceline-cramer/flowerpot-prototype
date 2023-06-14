@@ -5,7 +5,12 @@ use std::{
 
 use ambient_api::prelude::*;
 
-use crate::components::{crafting::*, crops::medium_occupant_ref, items::*, map};
+use crate::components::{
+    crafting::*,
+    crops::{self, medium_occupant_ref},
+    items::*,
+    map,
+};
 use crate::player::PlayerEntities;
 
 /// Wasm-side crafting recipe data.
@@ -183,24 +188,51 @@ pub fn init_server_items() {
             player.left_held
         };
 
-        let Some(crop) = entity::get_component(held, plantable_crop_class_ref()) else { return };
+        if let Some(crop) = entity::get_component(held, plantable_crop_class_ref()) {
+            if !entity::has_component(data.target_ref, map::tile())
+                || entity::has_component(data.target_ref, medium_occupant_ref())
+            {
+                return;
+            }
 
-        if !entity::has_component(data.target_ref, map::tile())
-            || entity::has_component(data.target_ref, medium_occupant_ref())
-        {
-            return;
-        }
+            entity::add_component(
+                data.target_ref,
+                medium_occupant_ref(),
+                crate::crop::new_medium(crop, data.target_ref),
+            );
 
-        entity::add_component(
-            data.target_ref,
-            medium_occupant_ref(),
-            crate::crop::new_medium(crop, data.target_ref),
-        );
+            if data.hand {
+                player.set_right_held(EntityId::null());
+            } else {
+                player.set_left_held(EntityId::null());
+            }
+        } else if let Some(crop) = entity::get_component(data.target_ref, crops::class_ref()) {
+            let Some(item) = entity::get_component(crop, crops::harvest_item_class_ref()) else { return };
 
-        if data.hand {
-            player.set_right_held(EntityId::null());
-        } else {
-            player.set_left_held(EntityId::null());
+            if !entity::has_component(data.target_ref, crops::is_medium_crop()) {
+                return;
+            }
+
+            let hand = if data.hand {
+                player.right_held
+            } else {
+                player.left_held
+            };
+
+            if !hand.is_null() {
+                return;
+            }
+
+            let Some(tile) = entity::get_component(data.target_ref, map::on_tile()) else { return };
+
+            entity::despawn(data.target_ref);
+            entity::remove_component(tile, medium_occupant_ref());
+
+            if data.hand {
+                player.set_right_held(item);
+            } else {
+                player.set_left_held(item);
+            }
         }
     });
 }

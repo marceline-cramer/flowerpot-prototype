@@ -8,6 +8,7 @@ version = "0.0.1"
 [dependencies]
 ambient_api = { git = "https://github.com/AmbientRun/Ambient.git", rev = "8eb1a79" }
 lazy_static = "1.4"
+once_cell = "1.18"
 parry2d = "0.13"
 slab = "0.4"
 

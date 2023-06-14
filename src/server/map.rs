@@ -157,17 +157,17 @@ pub fn init_map() {
 
         Entity::new()
             .with(map::position(), vec2(10.0, 15.0))
-            .with(items::class_ref(), *BLUE_ITEM)
+            .with(items::class_ref(), BLUE_ITEM.get())
             .spawn();
 
         Entity::new()
             .with(map::position(), vec2(17.0, 13.0))
-            .with(items::class_ref(), *YELLOW_ITEM)
+            .with(items::class_ref(), YELLOW_ITEM.get())
             .spawn();
 
         Entity::new()
             .with(map::position(), vec2(10.0, 13.0))
-            .with(items::class_ref(), *items::MAIZE_SEEDS)
+            .with(items::class_ref(), items::MAIZE_SEEDS.get())
             .spawn();
 
         let maize_tile = *map.get(&IVec2::new(0, 0)).unwrap();
@@ -175,7 +175,7 @@ pub fn init_map() {
         entity::add_component(
             maize_tile,
             crate::components::crops::medium_occupant_ref(),
-            crate::crop::new_medium(*crops::MAIZE_STAGE_1, maize_tile),
+            crate::crop::new_medium(crops::MAIZE_STAGE_1.get(), maize_tile),
         );
     }
 

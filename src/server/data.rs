@@ -1,4 +1,34 @@
+use std::sync::atomic::AtomicBool;
+
 use ambient_api::prelude::*;
+use once_cell::sync::OnceCell;
+
+/// A single-instance, lazily-spawned entity for use with the Prototype pattern.
+pub struct PrototypeEntity {
+    entity: OnceCell<EntityId>,
+    add_cb: Box<dyn Fn(EntityId) + Send + Sync + 'static>,
+    added: AtomicBool,
+}
+
+impl PrototypeEntity {
+    pub fn new(cb: impl Fn(EntityId) + Send + Sync + 'static) -> Self {
+        Self {
+            entity: OnceCell::new(),
+            add_cb: Box::new(cb),
+            added: AtomicBool::new(false),
+        }
+    }
+
+    pub fn get(&self) -> EntityId {
+        let e = *self.entity.get_or_init(|| Entity::new().spawn());
+
+        if !self.added.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            (*self.add_cb)(e);
+        }
+
+        e
+    }
+}
 
 macro_rules! expand_props {
     ($e:expr, $component:ident: $value:expr $(, $component_tail:ident: $value_tail:expr)* $(,)?) => {
@@ -7,33 +37,35 @@ macro_rules! expand_props {
     ($e:expr) => ($e);
 }
 
-macro_rules! spawn_entity {
+macro_rules! def_entity {
     ($($component:ident: $value:expr),* $(,)?) => {
-        expand_props!(Entity::new(), $($component: $value),*).spawn()
+        expand_props!(Entity::new(), $($component: $value),*)
     }
 }
 
-macro_rules! def_entity {
+macro_rules! def_prototype {
     ($item_name:ident $(, $component:ident: $value:expr)* $(,)?) => {
         ::lazy_static::lazy_static! {
-            pub static ref $item_name: EntityId = spawn_entity!($($component: $value),*);
+            pub static ref $item_name: PrototypeEntity = PrototypeEntity::new(move |e| {
+                entity::add_components(e, def_entity!($($component: $value),*));
+            });
         }
     }
 }
 
-def_entity!(
+def_prototype!(
     BLUE_ITEM,
     name: "Blue Item",
     color: vec4(0.0, 0.0, 1.0, 1.0),
 );
 
-def_entity!(
+def_prototype!(
     GREEN_ITEM,
     name: "Green Item",
     color: vec4(0.0, 1.0, 0.0, 1.0),
 );
 
-def_entity!(
+def_prototype!(
     YELLOW_ITEM,
     name: "Yellow Item",
     color: vec4(1.0, 1.0, 0.0, 1.0),
@@ -44,11 +76,11 @@ pub mod items {
 
     pub use crate::components::items::*;
 
-    def_entity!(
+    def_prototype!(
         MAIZE_SEEDS,
         name: "Maize Seeds",
         prefab_path: "assets/crops/maize_seeds.glb",
-        plantable_crop_class_ref: *super::crops::MAIZE_STAGE_1,
+        plantable_crop_class_ref: super::crops::MAIZE_STAGE_1.get(),
     );
 }
 
@@ -57,45 +89,40 @@ pub mod crops {
 
     use crate::components::crops::*;
 
-    def_entity!(
+    def_prototype!(
         MAIZE,
         prefab_url: "assets/crops/maize4.glb",
+        seed_ref: MAIZE_STAGE_1.get(),
     );
 
-    def_entity!(
+    def_prototype!(
         MAIZE_STAGE_3,
         prefab_url: "assets/crops/maize3.glb",
-        next_growth_phase_ref: *MAIZE,
+        next_growth_phase_ref: MAIZE.get(),
     );
 
-    def_entity!(
+    def_prototype!(
         MAIZE_STAGE_2,
         prefab_url: "assets/crops/maize2.glb",
-        next_growth_phase_ref: *MAIZE_STAGE_3,
+        next_growth_phase_ref: MAIZE_STAGE_3.get(),
     );
 
-    def_entity!(
+    def_prototype!(
         MAIZE_STAGE_1,
         prefab_url: "assets/crops/maize1.glb",
-        next_growth_phase_ref: *MAIZE_STAGE_2,
+        next_growth_phase_ref: MAIZE_STAGE_2.get(),
     );
 }
 
 pub fn init_data() {
     use crate::components::crafting::*;
 
-    // TODO better cyclic data definitions
-    entity::add_component(
-        *crops::MAIZE,
-        crate::components::crops::seed_ref(),
-        *crops::MAIZE_STAGE_1,
-    );
-
-    spawn_entity!(
+    def_entity!(
         recipe: (),
-        primary_ingredient: *BLUE_ITEM,
-        secondary_ingredient: *YELLOW_ITEM,
-        primary_yield: *GREEN_ITEM,
+        primary_ingredient: BLUE_ITEM.get(),
+        secondary_ingredient: YELLOW_ITEM.get(),
+        primary_yield: GREEN_ITEM.get(),
         secondary_yield: EntityId::null(),
-    );
+    )
+    .spawn();
 }

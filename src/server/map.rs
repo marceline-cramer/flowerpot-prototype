@@ -170,6 +170,11 @@ pub fn init_map() {
             .with(items::class_ref(), items::MAIZE_SEEDS.get())
             .spawn();
 
+        Entity::new()
+            .with(map::position(), vec2(23.0, 17.0))
+            .with(items::class_ref(), items::TOMATO_SEEDS.get())
+            .spawn();
+
         let maize_tile = *map.get(&IVec2::new(0, 0)).unwrap();
 
         entity::add_component(

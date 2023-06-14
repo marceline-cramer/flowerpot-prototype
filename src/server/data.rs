@@ -88,6 +88,13 @@ pub mod items {
         prefab_path: "assets/items/maize_seeds.glb",
         plantable_crop_class_ref: super::crops::MAIZE_STAGE_1.get(),
     );
+
+    def_prototype!(
+        TOMATO_SEEDS,
+        name: "Tomato Seeds",
+        prefab_path: "assets/items/tomato_seeds.glb",
+        plantable_crop_class_ref: super::crops::TOMATOES_STAGE_1.get(),
+    );
 }
 
 pub mod crops {
@@ -121,6 +128,41 @@ pub mod crops {
         prefab_url: "assets/crops/maize1.glb",
         next_growth_phase_ref: MAIZE_STAGE_2.get(),
         harvest_item_class_ref: items::MAIZE_SEEDS.get(),
+    );
+
+    def_prototype!(
+        TOMATOES,
+        prefab_url: "assets/crops/tomatoes5.glb",
+        seed_ref: TOMATOES_STAGE_1.get(),
+        harvest_item_class_ref: items::TOMATO_SEEDS.get(),
+    );
+
+    def_prototype!(
+        TOMATOES_STAGE_4,
+        prefab_url: "assets/crops/tomatoes4.glb",
+        next_growth_phase_ref: TOMATOES.get(),
+        harvest_item_class_ref: items::TOMATO_SEEDS.get(),
+    );
+
+    def_prototype!(
+        TOMATOES_STAGE_3,
+        prefab_url: "assets/crops/tomatoes3.glb",
+        next_growth_phase_ref: TOMATOES_STAGE_4.get(),
+        harvest_item_class_ref: items::TOMATO_SEEDS.get(),
+    );
+
+    def_prototype!(
+        TOMATOES_STAGE_2,
+        prefab_url: "assets/crops/tomatoes2.glb",
+        next_growth_phase_ref: TOMATOES_STAGE_3.get(),
+        harvest_item_class_ref: items::TOMATO_SEEDS.get(),
+    );
+
+    def_prototype!(
+        TOMATOES_STAGE_1,
+        prefab_url: "assets/crops/tomatoes1.glb",
+        next_growth_phase_ref: TOMATOES_STAGE_2.get(),
+        harvest_item_class_ref: items::TOMATO_SEEDS.get(),
     );
 }
 

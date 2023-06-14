@@ -10,7 +10,10 @@ use ambient_api::{
     prelude::*,
 };
 
-use crate::{components::player::*, messages::*};
+use crate::{
+    components::{crops::medium_occupant_ref, player::*},
+    messages::*,
+};
 
 // TODO make this a component?
 const HEAD_HEIGHT: f32 = 1.5;
@@ -219,12 +222,14 @@ pub async fn init_players() -> EntityId {
             .copied()
             .unwrap_or(EntityId::null());
 
-        // only select tiles for now
-        let target = tile_target;
+        let target = match entity::get_component(tile_target, medium_occupant_ref()) {
+            Some(crop_target) => crop_target,
+            None => tile_target,
+        };
 
         // de-highlight previous target
         if let Some(old_target) = entity::get_component(local_player_entity, targeted_ref()) {
-            if old_target != target {
+            if old_target != target && entity::has_component(old_target, outline_recursive()) {
                 entity::remove_component(old_target, outline_recursive());
             }
         }

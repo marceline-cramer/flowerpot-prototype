@@ -77,6 +77,12 @@ pub mod items {
     pub use crate::components::items::*;
 
     def_prototype!(
+        MAIZE,
+        name: "Maize",
+        prefab_path: "assets/items/maize.glb",
+    );
+
+    def_prototype!(
         MAIZE_SEEDS,
         name: "Maize Seeds",
         prefab_path: "assets/items/maize_seeds.glb",
@@ -93,29 +99,34 @@ pub mod crops {
         MAIZE,
         prefab_url: "assets/crops/maize4.glb",
         seed_ref: MAIZE_STAGE_1.get(),
+        harvest_item_class_ref: items::MAIZE.get(),
     );
 
     def_prototype!(
         MAIZE_STAGE_3,
         prefab_url: "assets/crops/maize3.glb",
         next_growth_phase_ref: MAIZE.get(),
+        harvest_item_class_ref: items::MAIZE_SEEDS.get(),
     );
 
     def_prototype!(
         MAIZE_STAGE_2,
         prefab_url: "assets/crops/maize2.glb",
         next_growth_phase_ref: MAIZE_STAGE_3.get(),
+        harvest_item_class_ref: items::MAIZE_SEEDS.get(),
     );
 
     def_prototype!(
         MAIZE_STAGE_1,
         prefab_url: "assets/crops/maize1.glb",
         next_growth_phase_ref: MAIZE_STAGE_2.get(),
+        harvest_item_class_ref: items::MAIZE_SEEDS.get(),
     );
 }
 
 pub fn init_data() {
     use crate::components::crafting::*;
+    use items::*;
 
     def_entity!(
         recipe: (),
@@ -123,6 +134,15 @@ pub fn init_data() {
         secondary_ingredient: YELLOW_ITEM.get(),
         primary_yield: GREEN_ITEM.get(),
         secondary_yield: EntityId::null(),
+    )
+    .spawn();
+
+    def_entity!(
+        recipe: (),
+        primary_ingredient: MAIZE.get(),
+        secondary_ingredient: EntityId::null(),
+        primary_yield: MAIZE_SEEDS.get(),
+        secondary_yield: MAIZE_SEEDS.get(),
     )
     .spawn();
 }

@@ -5,7 +5,6 @@ use crate::components::{crops::*, map};
 pub fn init_crops() {
     spawn_query((is_medium_crop(), class_ref(), map::on_tile())).bind(move |crops| {
         for (crop, (_, class, _tile)) in crops {
-
             entity::add_component(crop, local_to_world(), Default::default());
 
             for child in entity::get_component(crop, children()).unwrap_or_default() {
@@ -23,9 +22,11 @@ pub fn init_crops() {
         }
     });
 
-    despawn_query((is_medium_crop(), map::on_tile())).bind(move |crops| {
-        for (e, _) in crops {
-            entity::despawn_recursive(e);
+    despawn_query((is_medium_crop(), map::on_tile(), children())).bind(move |crops| {
+        for (e, (_, _, children)) in crops {
+            for child in children {
+                entity::despawn_recursive(child);
+            }
         }
     });
 }

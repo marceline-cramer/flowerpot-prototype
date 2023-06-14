@@ -5,7 +5,6 @@ use crate::components::{crops::*, map};
 pub fn init_crops() {
     spawn_query((is_medium_crop(), class_ref(), map::on_tile())).bind(move |crops| {
         for (crop, (_, class, _tile)) in crops {
-            eprintln!("spawned crop");
 
             entity::add_component(crop, local_to_world(), Default::default());
 

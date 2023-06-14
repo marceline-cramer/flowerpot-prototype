@@ -165,8 +165,6 @@ pub async fn init_players() -> EntityId {
                     crate::components::items::search_result(),
                 ) {
                     PlayerPickUpItemInput::new(closest_item).send_server_reliable();
-                } else {
-                    eprintln!("No closest item to pick up?");
                 }
             }
 
@@ -205,8 +203,6 @@ pub async fn init_players() -> EntityId {
 
         let ray_delta = Quat::from_rotation_z(yaw) * Quat::from_rotation_x(pitch) * -Vec3::Y;
         let ray_origin = Vec3::Z * HEAD_HEIGHT + position;
-
-        println!("{:#?} {:#?}", ray_delta, ray_origin);
 
         // calculate intersection with Z plane
         let ray_length = -ray_origin.z / ray_delta.z;

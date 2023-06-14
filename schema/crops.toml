@@ -33,3 +33,9 @@ type = "Empty"
 name = "IsMediumCrop"
 description = "A tag given to all instances of medium crops."
 attributes = ["Debuggable", "Networked"]
+
+[components."crops::harvest_item_class_ref"]
+type = "EntityId"
+name = "HarvestItemClassRef"
+description = "The item to give the player when they harvest this crop."
+attributes = ["Debuggable", "Networked"]

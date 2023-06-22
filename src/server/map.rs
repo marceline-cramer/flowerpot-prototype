@@ -76,7 +76,7 @@ pub fn init_map() {
         .with(sustenance(), 2.0)
         .with(
             pbr_material_from_url(),
-            asset::url("assets/materials/materials/pipeline.json/1/mat.json").unwrap(),
+            asset::url("assets/materials/materials/pipeline.toml/1/mat.json").unwrap(),
         )
         .spawn();
 

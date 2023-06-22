@@ -65,7 +65,7 @@ pub fn init_map() {
                 entity::set_component(
                     e,
                     pbr_material_from_url(),
-                    asset::url("assets/materials/materials/pipeline.json/0/mat.json").unwrap(),
+                    asset::url("assets/materials/materials/pipeline.toml/0/mat.json").unwrap(),
                 );
             }
         });

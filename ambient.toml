@@ -1,4 +1,4 @@
-[project]
+[ember]
 id = "flowerpot_prototype"
 name = "Flowerpot Prototype"
 version = "0.0.1"

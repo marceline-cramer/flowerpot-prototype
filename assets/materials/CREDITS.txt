@@ -1,5 +1,0 @@
-The following assets are from the Minecraft resource pack "Alvoria's Sanity" and are licensed under CC BY-NC 4.0.
-License: https://creativecommons.org/licenses/by-nc/4.0/
-Pack page: http://www.planetminecraft.com/texture_pack/alvorias-sanity-pack/
-- grass.png
-- soil.png

@@ -1,3 +1,0 @@
-The following assets are licensed under CC0 (https://creativecommons.org/publicdomain/zero/1.0)
-Source: https://mordrag.itch.io/low-poly-animals
-- rabbit.glb

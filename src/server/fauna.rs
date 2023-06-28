@@ -1,4 +1,4 @@
-use ambient_api::prelude::*;
+use ambient_api::{components::core::transform::rotation, prelude::*};
 
 use crate::components::*;
 
@@ -9,7 +9,7 @@ pub fn init_fauna() {
         .requires(fauna())
         .each_frame(|entities| {
             for (e, (old_fullness, hunger_rate)) in entities {
-                let fullness_delta = hunger_rate * frametime();
+                let fullness_delta = hunger_rate * delta_time();
                 let new_fullness = old_fullness - fullness_delta;
                 entity::set_component(e, fullness(), new_fullness);
             }
@@ -32,7 +32,7 @@ pub fn init_fauna() {
         .requires(fauna())
         .each_frame(|entities| {
             for (e, (old_stamina, metabolism)) in entities {
-                let new_stamina = old_stamina + metabolism * frametime();
+                let new_stamina = old_stamina + metabolism * delta_time();
                 entity::set_component(e, stamina(), new_stamina);
             }
         });

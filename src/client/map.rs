@@ -1,7 +1,12 @@
 use std::{collections::HashMap, sync::Mutex};
 
 use ambient_api::{
-    components::core::primitives::quad, concepts::make_transformable, glam::IVec2, prelude::*,
+    components::core::{
+        primitives::quad, rendering::pbr_material_from_url, transform::translation,
+    },
+    concepts::make_transformable,
+    glam::IVec2,
+    prelude::*,
 };
 
 use crate::components::{cover_crop_occupant, map::*};

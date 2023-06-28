@@ -1,8 +1,11 @@
 use std::{collections::HashMap, sync::Arc};
 
 use ambient_api::{
-    components::core::prefab::prefab_from_url, concepts::make_transformable, glam::IVec2,
-    prelude::*, rand,
+    components::core::{prefab::prefab_from_url, rendering::pbr_material_from_url},
+    concepts::make_transformable,
+    glam::IVec2,
+    prelude::*,
+    rand,
 };
 
 use crate::components::*;

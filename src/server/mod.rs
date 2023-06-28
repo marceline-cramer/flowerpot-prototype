@@ -9,7 +9,16 @@ mod player;
 mod shared;
 
 fn init_server() {
-    use ambient_api::{concepts::make_transformable, prelude::*};
+    use ambient_api::{
+        components::core::{
+            app::main_scene,
+            rendering::{light_diffuse, sky, sun},
+            transform::rotation,
+        },
+        concepts::make_transformable,
+        prelude::*,
+    };
+
     use components::{map::position, *};
 
     make_transformable()
@@ -30,7 +39,7 @@ fn init_server() {
     ))
     .each_frame(|entities| {
         for (e, (step, duration, start, target)) in entities {
-            let new_step = step + frametime();
+            let new_step = step + delta_time();
             if new_step > duration {
                 entity::remove_component(e, movement_step());
                 entity::add_component(e, position(), target);

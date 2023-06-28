@@ -1,6 +1,9 @@
 use std::sync::atomic::AtomicBool;
 
-use ambient_api::prelude::*;
+use ambient_api::{
+    components::core::{app::name, rendering::color},
+    prelude::*,
+};
 use once_cell::sync::OnceCell;
 
 /// A single-instance, lazily-spawned entity for use with the Prototype pattern.

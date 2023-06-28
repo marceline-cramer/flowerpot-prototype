@@ -1,5 +1,11 @@
 use ambient_api::{
-    components::core::{prefab::prefab_from_url, primitives::cube},
+    components::core::{
+        ecs::children,
+        prefab::prefab_from_url,
+        primitives::cube,
+        rendering::color,
+        transform::{local_to_parent, local_to_world},
+    },
     prelude::*,
 };
 

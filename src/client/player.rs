@@ -2,7 +2,13 @@ use std::f32::consts::{FRAC_PI_2, TAU};
 
 use ambient_api::{
     components::core::{
-        camera::aspect_ratio_from_window, prefab::prefab_from_url, primitives::cube,
+        app::main_scene,
+        camera::aspect_ratio_from_window,
+        player::{local_user_id, player, user_id},
+        prefab::prefab_from_url,
+        primitives::cube,
+        rendering::{color, outline_recursive},
+        transform::{local_to_parent, local_to_world, rotation, scale, translation},
     },
     concepts::{make_perspective_infinite_reverse_camera, make_transformable},
     input::get_previous,

@@ -1,4 +1,11 @@
-use ambient_api::{components::core::prefab::prefab_from_url, prelude::*};
+use ambient_api::{
+    components::core::{
+        ecs::children,
+        prefab::prefab_from_url,
+        transform::{local_to_parent, local_to_world},
+    },
+    prelude::*,
+};
 
 use crate::components::{crops::*, map};
 

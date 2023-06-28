@@ -1,6 +1,10 @@
 use std::f32::consts::{FRAC_PI_2, TAU};
 
-use ambient_api::{message::Source, prelude::*};
+use ambient_api::{
+    components::core::player::{player, user_id},
+    message::Source,
+    prelude::*,
+};
 
 use crate::{
     components::{map, player::*},

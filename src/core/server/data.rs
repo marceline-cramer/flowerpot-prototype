@@ -134,6 +134,12 @@ pub mod crops {
     );
 
     def_prototype!(
+        IRIS,
+        prefab_url: "assets/crops/iris.glb",
+        seed_ref: IRIS.get(),
+    );
+
+    def_prototype!(
         TOMATOES,
         prefab_url: "assets/crops/tomatoes5.glb",
         seed_ref: TOMATOES_STAGE_1.get(),
